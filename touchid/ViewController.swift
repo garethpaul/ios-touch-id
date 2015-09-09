@@ -20,7 +20,8 @@ class ViewController: UIViewController {
         var stringError: String?
         
         // Test if TouchID fingerprint authentication is available on the device and a fingerprint has been enrolled.
-        if context.canEvaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, error:&error) {
+        do {
+            try context.canEvaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics)
             
             // evaluate
             var reason = "Authenticate for server login"
@@ -31,7 +32,7 @@ class ViewController: UIViewController {
                 // check whether evaluation of fingerprint was successful
                 if success {
                     // fingerprint validation was successful
-                    println("Fingerprint validated.")
+                    print("Fingerprint validated.")
                     
                 } else {
                     // fingerprint validation failed
@@ -52,10 +53,11 @@ class ViewController: UIViewController {
                         failureReason = "unable to authenticate user"
                     }
                     
-                    println("Fingerprint validation failed: \(failureReason).");
+                    print("Fingerprint validation failed: \(failureReason).");
                 }
             })
-        } else {
+        } catch var error1 as NSError {
+            error = error1
             //get more information
             var reason = "Local Authentication not available"
             switch error!.code {
@@ -68,7 +70,7 @@ class ViewController: UIViewController {
             default: stringError = "Authentication not available"
             }
             
-            println("Error: Touch ID fingerprint authentication is not available: \(reason)");
+            print("Error: Touch ID fingerprint authentication is not available: \(reason)");
         }
         // Do any additional setup after loading the view, typically from a nib.
     }
