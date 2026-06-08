@@ -1,5 +1,8 @@
 # ios-touch-id
 
+<!-- README-OVERVIEW-IMAGE -->
+![Project overview](docs/readme-overview.svg)
+
 ## Overview
 
 `garethpaul/ios-touch-id` is an Apple platform application or Swift sample. TouchID Sample
@@ -73,4 +76,3 @@ Keep changes small and tied to the project that is already present in this repos
 Prior README summary:
 
 > ios-touch-id <!-- README-OVERVIEW-IMAGE --> TouchID Sample
-
