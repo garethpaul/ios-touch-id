@@ -75,4 +75,4 @@ Keep changes small and tied to the project that is already present in this repos
 
 Prior README summary:
 
-> ios-touch-id <!-- README-OVERVIEW-IMAGE --> TouchID Sample
+> ios-touch-id TouchID Sample
