@@ -25,6 +25,12 @@ Helpful reports include:
 ## Project Security Posture
 
 - This repository appears to be an Apple platform application or Swift sample. The active security scope is the code and documentation on the default branch.
+- `touchid/ViewController.swift` uses `LocalAuthentication` for a local biometric
+  sample. Local biometric success must not be represented as server identity
+  proof without a separate server-side authentication design.
+- Avoid authentication-state logging, token storage, analytics, upload, or
+  network behavior in the sample. Run `make check` after changing the
+  authentication flow, project metadata, storyboards, assets, tests, or docs.
 - Review found authentication, token, or session-related code paths; changes in those areas should receive security-focused review before merge.
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.

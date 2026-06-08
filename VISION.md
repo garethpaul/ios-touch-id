@@ -12,6 +12,11 @@ request local authentication in an iOS app. Project context lives in
 The goal is to keep the authentication sample small, clear, and safe around
 user identity signals.
 
+Current baseline: `make check` runs `scripts/check-baseline.py` to verify the
+legacy Xcode project shape, plist/storyboard/asset parsing,
+`LocalAuthentication` source, local biometric wording, and authentication-state
+logging guardrails.
+
 The current focus is:
 
 Priority:
@@ -19,6 +24,8 @@ Priority:
 - Preserve the local authentication flow
 - Keep the sample easy to build and inspect
 - Avoid treating biometric success as remote identity proof
+- Keep the sample clear that local biometric success is not server identity
+  proof
 - Maintain security policy and Xcode project context
 
 Next priorities:
@@ -32,6 +39,8 @@ Contribution rules:
 
 - One PR = one focused authentication, UI, build, or documentation change.
 - Verify on compatible hardware when changing biometric behavior.
+- Run `make check` before pushing changes to authentication flow, project
+  metadata, assets, tests, docs, or privacy posture.
 - Keep generated signing files and local paths out of git.
 - Do not add remote authentication without a separate design.
 

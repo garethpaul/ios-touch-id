@@ -12,7 +12,10 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 ## Repository Contents
 
 - `README.md` - project overview and local usage notes
+- `CHANGES.md` - recent maintenance changes
+- `Makefile` - local static verification entry point
 - `SECURITY.md` - security reporting and disclosure guidance
+- `scripts/check-baseline.py` - static LocalAuthentication baseline checks
 - `touchid` - source or example code
 - `touchid.xcodeproj` - Xcode project file
 - `touchidTests` - source or example code
@@ -22,7 +25,7 @@ Additional scan context:
 
 - Source directories: touchid, touchidTests
 - Dependency and build manifests: none detected
-- Entry points or build surfaces: touchid.xcodeproj
+- Entry points or build surfaces: `make check`, touchid.xcodeproj
 - Test-looking files: touchidTests/Info.plist, touchidTests/touchidTests.swift
 
 ## Getting Started
@@ -30,6 +33,7 @@ Additional scan context:
 ### Prerequisites
 
 - Git
+- Python 3 for static verification with `make check`
 - macOS with Xcode for building Apple platform projects
 
 ### Setup
@@ -37,6 +41,7 @@ Additional scan context:
 ```bash
 git clone https://github.com/garethpaul/ios-touch-id.git
 cd ios-touch-id
+make check
 ```
 
 The setup commands above are derived from repository files. Legacy mobile, Python, or JavaScript samples may require older SDKs or package versions than a modern workstation uses by default.
@@ -45,8 +50,15 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 - Open `touchid.xcodeproj` in Xcode, choose the app or sample scheme, and run it on the matching simulator/device.
 
+This is a local biometric sample using `LocalAuthentication`. Biometric success
+should be treated as a local device signal only, not as server identity proof.
+The sample does not define accounts, tokens, networking, uploads, or analytics.
+
 ## Testing and Verification
 
+- `make check` runs `scripts/check-baseline.py`, which verifies Xcode project
+  wiring, plist/storyboard/asset files, the LocalAuthentication flow, local
+  biometric wording, and static privacy guardrails.
 - Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -54,9 +66,14 @@ When the required SDK or runtime is unavailable, use static checks and source re
 ## Configuration and Secrets
 
 - No required secret or credential file was identified in the repository scan. If you add integrations later, keep secrets out of git.
+- Keep signing material, local `.xcconfig` files, and environment files out of
+  git.
 
 ## Security and Privacy Notes
 
+- Avoid authentication-state logging. Review all changes to
+  `touchid/ViewController.swift` for LocalAuthentication error handling,
+  fallback behavior, and local biometric privacy.
 - Review changes touching authentication or token handling; examples from the scan include touchid/ViewController.swift.
 - Review changes touching network requests, sockets, or service endpoints; examples from the scan include touchid/Info.plist, touchidTests/Info.plist.
 - Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include touchid/Info.plist, touchidTests/Info.plist.
@@ -64,6 +81,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 ## Maintenance Notes
 
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
+- Run `make check` before pushing changes to Swift sources, project metadata,
+  storyboards, app assets, tests, or security documentation.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 
