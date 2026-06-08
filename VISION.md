@@ -1,5 +1,8 @@
 ## iOS Touch ID Vision
 
+This document explains the current state and direction of the project.
+Project overview and developer docs: [`README.md`](README.md)
+
 iOS Touch ID is a Swift sample for local biometric authentication.
 
 The repository is useful as a compact Touch ID-era project for learning how to
