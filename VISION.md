@@ -38,7 +38,7 @@ Biometric authentication should remain local and explicit. Do not log biometric
 state, store sensitive secrets without keychain guidance, or use local success as
 unverified server identity.
 
-## What We Will Not Merge For Now
+## What We Will Not Merge (For Now)
 
 - Remote auth claims without server-side design
 - Sensitive logging around authentication state
