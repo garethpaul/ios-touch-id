@@ -21,6 +21,8 @@ xcuserdata
 *.secrets.xcconfig
 .env
 .env.*
+__pycache__/
+*.pyc
 
 # CocoaPods
 #

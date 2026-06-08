@@ -75,6 +75,10 @@ def require_contains(text: str, needle: str, label: str) -> None:
         fail(f"{label} must mention {needle!r}")
 
 
+def flattened(text: str) -> str:
+    return " ".join(text.split())
+
+
 def parse_xml(path: str) -> ET.Element:
     try:
         return ET.parse(ROOT / path).getroot()
@@ -155,6 +159,9 @@ def check_local_authentication_flow() -> None:
         "context.canEvaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, error: &error)",
         'let reason = "Authenticate locally to continue"',
         "context.evaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics",
+        "[weak self]",
+        "dispatch_async(dispatch_get_main_queue())",
+        "authenticationMessage",
         "authenticationFailureReason(authenticationError)",
         "guard let code = error?.code",
         "LAError.AuthenticationFailed.rawValue",
@@ -178,23 +185,23 @@ def check_docs() -> None:
     for token in ["DerivedData", "*.xcuserstate", "*.local.xcconfig", "*.secrets.xcconfig", ".env"]:
         require_contains(gitignore, token, ".gitignore")
 
-    readme = read_text("README.md")
+    readme = flattened(read_text("README.md"))
     for token in ["make check", "scripts/check-baseline.py", "LocalAuthentication", "local biometric", "authentication-state logging"]:
         require_contains(readme, token, "README.md")
 
-    vision = read_text("VISION.md")
-    for token in ["scripts/check-baseline.py", "local biometric", "server identity", "authentication-state", "logging guardrails"]:
+    vision = flattened(read_text("VISION.md"))
+    for token in ["scripts/check-baseline.py", "local biometric", "server identity", "authentication-state logging"]:
         require_contains(vision, token, "VISION.md")
 
-    security = read_text("SECURITY.md")
+    security = flattened(read_text("SECURITY.md"))
     for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "authentication-state logging"]:
         require_contains(security, token, "SECURITY.md")
 
-    changes = read_text("CHANGES.md")
-    for token in ["console logging", "callback error", "make check", "local-only privacy"]:
+    changes = flattened(read_text("CHANGES.md"))
+    for token in ["console logging", "callback error", "in-memory state", "make check", "local-only privacy"]:
         require_contains(changes, token, "CHANGES.md")
 
-    plan = read_text("docs/plans/2026-06-08-touch-id-baseline.md")
+    plan = flattened(read_text("docs/plans/2026-06-08-touch-id-baseline.md"))
     require_contains(plan, "status: completed", "baseline plan")
 
 

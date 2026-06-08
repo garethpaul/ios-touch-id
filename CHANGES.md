@@ -6,6 +6,8 @@
   callback.
 - Switched failure classification to use the LocalAuthentication callback error
   instead of the preflight error.
+- Kept authentication results in local in-memory state with a weak callback
+  capture instead of logging them.
 - Updated the sample prompt to describe local authentication instead of server
   login.
 - Added `make check` and a static Touch ID baseline for project metadata,

@@ -10,6 +10,8 @@ import UIKit
 import LocalAuthentication
 
 class ViewController: UIViewController {
+
+    private var authenticationMessage = "authentication not started"
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,15 +28,19 @@ class ViewController: UIViewController {
             // evaluate
             let reason = "Authenticate locally to continue"
 
-            context.evaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, localizedReason: reason, reply: {
+            context.evaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, localizedReason: reason, reply: { [weak self]
                 (success: Bool, authenticationError: NSError?) -> Void in
                 
-                if !success {
-                    _ = self.authenticationFailureReason(authenticationError)
+                dispatch_async(dispatch_get_main_queue()) {
+                    if success {
+                        self?.authenticationMessage = "authentication succeeded"
+                    } else {
+                        self?.authenticationMessage = self?.authenticationFailureReason(authenticationError) ?? "unable to authenticate user"
+                    }
                 }
             })
         } else {
-            _ = authenticationFailureReason(error)
+            authenticationMessage = authenticationFailureReason(error)
         }
     }
 
