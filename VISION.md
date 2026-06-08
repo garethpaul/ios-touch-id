@@ -38,7 +38,6 @@ Canonical security policy and reporting:
 
 - [`SECURITY.md`](SECURITY.md)
 
-
 Biometric authentication should remain local and explicit. Do not log biometric
 state, store sensitive secrets without keychain guidance, or use local success as
 unverified server identity.
