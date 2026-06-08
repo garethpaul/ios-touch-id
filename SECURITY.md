@@ -27,7 +27,8 @@ Helpful reports include:
 - This repository appears to be an Apple platform application or Swift sample. The active security scope is the code and documentation on the default branch.
 - `touchid/ViewController.swift` uses `LocalAuthentication` for a local biometric
   sample. Local biometric success must not be represented as server identity
-  proof without a separate server-side authentication design.
+  proof without a separate server-side authentication design. Biometric prompts
+  should remain explicit and user-triggered.
 - Avoid authentication-state logging, token storage, analytics, upload, or
   network behavior in the sample. Run `make check` after changing the
   authentication flow, project metadata, storyboards, assets, tests, or docs.

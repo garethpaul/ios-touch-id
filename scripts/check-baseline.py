@@ -24,6 +24,7 @@ REQUIRED_FILES = [
     "SECURITY.md",
     "VISION.md",
     "build.sh",
+    "docs/plans/2026-06-08-explicit-local-auth.md",
     "docs/plans/2026-06-08-touch-id-baseline.md",
     "docs/readme-overview.svg",
     "touchid.xcodeproj/project.pbxproj",
@@ -107,6 +108,27 @@ def strip_swift_line_comments(text: str) -> str:
     return "\n".join(line.split("//", 1)[0] for line in text.splitlines())
 
 
+def swift_function_body(text: str, signature: str) -> str:
+    start = text.find(signature)
+    if start == -1:
+        return ""
+
+    body_start = text.find("{", start)
+    if body_start == -1:
+        return ""
+
+    depth = 0
+    for index in range(body_start, len(text)):
+        character = text[index]
+        if character == "{":
+            depth += 1
+        elif character == "}":
+            depth -= 1
+            if depth == 0:
+                return text[body_start + 1:index]
+    return ""
+
+
 def check_required_files() -> None:
     for path in REQUIRED_FILES:
         require_file(path)
@@ -170,8 +192,15 @@ def check_app_metadata_and_assets() -> None:
 
 def check_local_authentication_flow() -> None:
     source = strip_swift_line_comments(read_text("touchid/ViewController.swift"))
+    view_did_load = swift_function_body(source, "override func viewDidLoad")
+    auth_action = swift_function_body(source, "func authenticateButtonTapped")
+    auth_flow = swift_function_body(source, "func authenticateWithBiometrics")
     for token in [
         "import LocalAuthentication",
+        "private let authenticateButton = UIButton(type: UIButtonType.System)",
+        "private var authenticationInProgress = false",
+        "configureAuthenticationButton()",
+        'addTarget(self, action: "authenticateButtonTapped:", forControlEvents: UIControlEvents.TouchUpInside)',
         "let context = LAContext()",
         "context.canEvaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, error: &error)",
         'let reason = "Authenticate locally to continue"',
@@ -191,6 +220,19 @@ def check_local_authentication_flow() -> None:
 
     if "error!.code" in source:
         fail("authentication failure handling must not force-unwrap the preflight error")
+    if "configureAuthenticationButton()" not in view_did_load or "authenticateWithBiometrics()" in view_did_load:
+        fail("viewDidLoad must configure the explicit auth action without starting biometric authentication")
+    if "authenticateWithBiometrics()" not in auth_action:
+        fail("authenticateButtonTapped must start the local authentication flow")
+    for token in [
+        "if authenticationInProgress",
+        "authenticationInProgress = true",
+        "authenticationMessage = \"authentication started\"",
+        "authenticateButton.enabled = false",
+        "authenticationInProgress = false",
+        "authenticateButton.enabled = true",
+    ]:
+        require_contains(auth_flow, token, "authenticateWithBiometrics")
 
     for pattern in FORBIDDEN_SOURCE_PATTERNS:
         if re.search(pattern, source, flags=re.IGNORECASE):
@@ -215,11 +257,13 @@ def check_docs() -> None:
         require_contains(security, token, "SECURITY.md")
 
     changes = flattened(read_text("CHANGES.md"))
-    for token in ["console logging", "callback error", "in-memory state", "build.sh", "make check", "local-only privacy"]:
+    for token in ["console logging", "callback error", "in-memory state", "explicit", "build.sh", "make check", "local-only privacy"]:
         require_contains(changes, token, "CHANGES.md")
 
     plan = flattened(read_text("docs/plans/2026-06-08-touch-id-baseline.md"))
     require_contains(plan, "status: completed", "baseline plan")
+    explicit_plan = flattened(read_text("docs/plans/2026-06-08-explicit-local-auth.md"))
+    require_contains(explicit_plan, "status: completed", "explicit auth plan")
 
 
 def main() -> None:

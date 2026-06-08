@@ -53,7 +53,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Run `./build.sh` when the required platform toolchain is installed. Set
   `SIMULATOR_NAME` to override the default simulator.
 
-This is a local biometric sample using `LocalAuthentication`. Biometric success
+This is a local biometric sample using `LocalAuthentication`. Tap the local
+authentication button to start the biometric request. Biometric success
 should be treated as a local device signal only, not as server identity proof.
 The sample does not define accounts, tokens, networking, uploads, or analytics.
 
@@ -61,7 +62,8 @@ The sample does not define accounts, tokens, networking, uploads, or analytics.
 
 - `make check` runs `scripts/check-baseline.py`, which verifies Xcode project
   wiring, plist/storyboard/asset files, the LocalAuthentication flow, local
-  biometric wording, and static privacy guardrails.
+  biometric wording, explicit user-triggered authentication, and static privacy
+  guardrails.
 - Full legacy verification uses `./build.sh`, Xcode's test action, or
   `xcodebuild test` with the appropriate target and destination on macOS.
 
@@ -77,7 +79,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 
 - Avoid authentication-state logging. Review all changes to
   `touchid/ViewController.swift` for LocalAuthentication error handling,
-  fallback behavior, and local biometric privacy.
+  fallback behavior, explicit user-triggered prompts, and local biometric
+  privacy.
 - Review changes touching authentication or token handling; examples from the scan include touchid/ViewController.swift.
 - Review changes touching network requests, sockets, or service endpoints; examples from the scan include touchid/Info.plist, touchidTests/Info.plist.
 - Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include touchid/Info.plist, touchidTests/Info.plist.

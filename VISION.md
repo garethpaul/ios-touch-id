@@ -17,6 +17,8 @@ legacy Xcode project shape, plist/storyboard/asset parsing,
 `LocalAuthentication` source, local biometric wording, and authentication-state
 logging guardrails. The build script is intentionally small and skips cleanly on
 hosts without Xcode.
+The baseline also verifies that biometric prompts stay behind an explicit user
+action instead of starting from `viewDidLoad`.
 
 The current focus is:
 
@@ -24,6 +26,7 @@ Priority:
 
 - Preserve the local authentication flow
 - Keep the sample easy to build and inspect
+- Keep biometric prompts explicit and user-triggered
 - Avoid treating biometric success as remote identity proof
 - Keep the sample clear that local biometric success is not server identity
   proof

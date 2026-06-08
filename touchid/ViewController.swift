@@ -11,14 +11,52 @@ import LocalAuthentication
 
 class ViewController: UIViewController {
 
+    private let authenticateButton = UIButton(type: UIButtonType.System)
+    private var authenticationInProgress = false
     private var authenticationMessage = "authentication not started"
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        configureAuthenticationButton()
+    }
+
+    private func configureAuthenticationButton() {
+        authenticateButton.setTitle("Authenticate Locally", forState: UIControlState.Normal)
+        authenticateButton.addTarget(self, action: "authenticateButtonTapped:", forControlEvents: UIControlEvents.TouchUpInside)
+        authenticateButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(authenticateButton)
+
+        view.addConstraint(NSLayoutConstraint(
+            item: authenticateButton,
+            attribute: NSLayoutAttribute.CenterX,
+            relatedBy: NSLayoutRelation.Equal,
+            toItem: view,
+            attribute: NSLayoutAttribute.CenterX,
+            multiplier: 1.0,
+            constant: 0.0))
+        view.addConstraint(NSLayoutConstraint(
+            item: authenticateButton,
+            attribute: NSLayoutAttribute.CenterY,
+            relatedBy: NSLayoutRelation.Equal,
+            toItem: view,
+            attribute: NSLayoutAttribute.CenterY,
+            multiplier: 1.0,
+            constant: 0.0))
+    }
+
+    @IBAction func authenticateButtonTapped(sender: AnyObject) {
         authenticateWithBiometrics()
     }
 
     private func authenticateWithBiometrics() {
+        if authenticationInProgress {
+            return
+        }
+
+        authenticationInProgress = true
+        authenticationMessage = "authentication started"
+        authenticateButton.enabled = false
+
         // Get the local authentication context:
         let context = LAContext()
         var error : NSError?
@@ -32,6 +70,8 @@ class ViewController: UIViewController {
                 (success: Bool, authenticationError: NSError?) -> Void in
                 
                 dispatch_async(dispatch_get_main_queue()) {
+                    self?.authenticationInProgress = false
+                    self?.authenticateButton.enabled = true
                     if success {
                         self?.authenticationMessage = "authentication succeeded"
                     } else {
@@ -40,6 +80,8 @@ class ViewController: UIViewController {
                 }
             })
         } else {
+            authenticationInProgress = false
+            authenticateButton.enabled = true
             authenticationMessage = authenticationFailureReason(error)
         }
     }
