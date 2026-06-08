@@ -7,6 +7,7 @@ import json
 import plistlib
 import re
 import shutil
+import subprocess
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -22,6 +23,7 @@ REQUIRED_FILES = [
     "README.md",
     "SECURITY.md",
     "VISION.md",
+    "build.sh",
     "docs/plans/2026-06-08-touch-id-baseline.md",
     "docs/readme-overview.svg",
     "touchid.xcodeproj/project.pbxproj",
@@ -112,6 +114,21 @@ def check_required_files() -> None:
 
 def check_project_metadata() -> None:
     project = read_text("touchid.xcodeproj/project.pbxproj")
+    build_script = read_text("build.sh")
+    shell_result = subprocess.run(["sh", "-n", "build.sh"], cwd=str(ROOT), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if shell_result.returncode != 0:
+        fail(f"build.sh must pass POSIX shell syntax checks: {shell_result.stderr.strip()}")
+    for token in [
+        "ci_build() {",
+        'xcodebuild -project "touchid.xcodeproj"',
+        '-target "touchid"',
+        'ci_build "${SIMULATOR_NAME:-iPhone 6}"',
+        "xcodebuild unavailable",
+    ]:
+        require_contains(build_script, token, "build.sh")
+    if "function ci_build" in build_script:
+        fail("build.sh must use POSIX function syntax")
+
     for token in [
         "ViewController.swift in Sources",
         "Main.storyboard in Resources",
@@ -186,11 +203,11 @@ def check_docs() -> None:
         require_contains(gitignore, token, ".gitignore")
 
     readme = flattened(read_text("README.md"))
-    for token in ["make check", "scripts/check-baseline.py", "LocalAuthentication", "local biometric", "authentication-state logging"]:
+    for token in ["make check", "build.sh", "scripts/check-baseline.py", "LocalAuthentication", "local biometric", "authentication-state logging"]:
         require_contains(readme, token, "README.md")
 
     vision = flattened(read_text("VISION.md"))
-    for token in ["scripts/check-baseline.py", "local biometric", "server identity", "authentication-state logging"]:
+    for token in ["scripts/check-baseline.py", "build script", "local biometric", "server identity", "authentication-state logging"]:
         require_contains(vision, token, "VISION.md")
 
     security = flattened(read_text("SECURITY.md"))
@@ -198,7 +215,7 @@ def check_docs() -> None:
         require_contains(security, token, "SECURITY.md")
 
     changes = flattened(read_text("CHANGES.md"))
-    for token in ["console logging", "callback error", "in-memory state", "make check", "local-only privacy"]:
+    for token in ["console logging", "callback error", "in-memory state", "build.sh", "make check", "local-only privacy"]:
         require_contains(changes, token, "CHANGES.md")
 
     plan = flattened(read_text("docs/plans/2026-06-08-touch-id-baseline.md"))

@@ -10,6 +10,7 @@
   capture instead of logging them.
 - Updated the sample prompt to describe local authentication instead of server
   login.
+- Added a POSIX-compatible `build.sh` that skips cleanly on hosts without Xcode.
 - Added `make check` and a static Touch ID baseline for project metadata,
   plist/storyboard/asset parsing, LocalAuthentication flow checks, and
   local-only privacy guardrails.

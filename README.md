@@ -14,6 +14,7 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 - `README.md` - project overview and local usage notes
 - `CHANGES.md` - recent maintenance changes
 - `Makefile` - local static verification entry point
+- `build.sh` - Xcode build helper that skips cleanly without Xcode
 - `SECURITY.md` - security reporting and disclosure guidance
 - `scripts/check-baseline.py` - static LocalAuthentication baseline checks
 - `touchid` - source or example code
@@ -24,8 +25,8 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 Additional scan context:
 
 - Source directories: touchid, touchidTests
-- Dependency and build manifests: none detected
-- Entry points or build surfaces: `make check`, touchid.xcodeproj
+- Dependency and build manifests: Makefile, build.sh
+- Entry points or build surfaces: `make check`, build.sh, touchid.xcodeproj
 - Test-looking files: touchidTests/Info.plist, touchidTests/touchidTests.swift
 
 ## Getting Started
@@ -49,6 +50,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Running or Using the Project
 
 - Open `touchid.xcodeproj` in Xcode, choose the app or sample scheme, and run it on the matching simulator/device.
+- Run `./build.sh` when the required platform toolchain is installed. Set
+  `SIMULATOR_NAME` to override the default simulator.
 
 This is a local biometric sample using `LocalAuthentication`. Biometric success
 should be treated as a local device signal only, not as server identity proof.
@@ -59,7 +62,8 @@ The sample does not define accounts, tokens, networking, uploads, or analytics.
 - `make check` runs `scripts/check-baseline.py`, which verifies Xcode project
   wiring, plist/storyboard/asset files, the LocalAuthentication flow, local
   biometric wording, and static privacy guardrails.
-- Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
+- Full legacy verification uses `./build.sh`, Xcode's test action, or
+  `xcodebuild test` with the appropriate target and destination on macOS.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 

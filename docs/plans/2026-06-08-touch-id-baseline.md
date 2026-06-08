@@ -18,6 +18,7 @@ biometric validation remains a macOS/Xcode and compatible-device responsibility.
   controller from the authentication callback.
 - Keep the prompt and documentation clear that local biometric success is not
   server identity proof.
+- Add a portable build script that skips cleanly on hosts without Xcode.
 - Add a reproducible `make check` target covering plist/storyboard/asset XML and
   JSON, Xcode project wiring, LocalAuthentication source, and local-only privacy
   guardrails.
@@ -26,4 +27,5 @@ biometric validation remains a macOS/Xcode and compatible-device responsibility.
 
 - `make check`
 - `python3 scripts/check-baseline.py`
+- `sh -n build.sh`
 - `git diff --check`

@@ -15,7 +15,8 @@ user identity signals.
 Current baseline: `make check` runs `scripts/check-baseline.py` to verify the
 legacy Xcode project shape, plist/storyboard/asset parsing,
 `LocalAuthentication` source, local biometric wording, and authentication-state
-logging guardrails.
+logging guardrails. The build script is intentionally small and skips cleanly on
+hosts without Xcode.
 
 The current focus is:
 
@@ -26,7 +27,7 @@ Priority:
 - Avoid treating biometric success as remote identity proof
 - Keep the sample clear that local biometric success is not server identity
   proof
-- Maintain security policy and Xcode project context
+- Maintain security policy, build script, and Xcode project context
 
 Next priorities:
 
