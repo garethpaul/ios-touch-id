@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-09
+
+- Added accessibility text for the local biometric action and in-progress
+  authentication state.
+
 ## 2026-06-08
 
 - Removed authentication success/failure console logging from the biometric

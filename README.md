@@ -60,8 +60,10 @@ Unavailable biometric hardware and unenrolled biometric states are handled
 locally, with failure reason tests covering unavailable Touch ID and missing
 errors. The error domain guard keeps unrelated errors on the generic local
 failure path. The LocalAuthentication fallback title is hidden because this
-sample does not implement a password fallback flow. The sample does not define
-accounts, tokens, networking, uploads, or analytics.
+sample does not implement a password fallback flow. The accessibility text describes
+the local biometric action and its in-progress state without implying remote
+credential transfer. The sample does not define accounts, tokens, networking,
+uploads, or analytics.
 
 ## Testing and Verification
 
@@ -69,7 +71,8 @@ accounts, tokens, networking, uploads, or analytics.
   wiring, plist/storyboard/asset files, the LocalAuthentication flow, local
   biometric wording, explicit user-triggered authentication, unavailable
   biometric failure reasons, failure reason tests, the error domain guard, the
-  hidden fallback title, and static privacy guardrails.
+  hidden fallback title, local authentication accessibility text, and static
+  privacy guardrails.
 - Full legacy verification uses `./build.sh`, Xcode's test action, or
   `xcodebuild test` with the appropriate target and destination on macOS.
 
@@ -100,6 +103,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `VISION.md` for project direction and contribution guardrails.
 - See `docs/plans/2026-06-09-local-auth-error-domain.md` for the error domain guardrail.
 - See `docs/plans/2026-06-09-local-auth-fallback-title.md` for the fallback title guardrail.
+- See `docs/plans/2026-06-09-local-auth-accessibility.md` for the local authentication accessibility guardrail.
 
 ## Contributing
 
