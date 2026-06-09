@@ -25,6 +25,7 @@ REQUIRED_FILES = [
     "VISION.md",
     "build.sh",
     "docs/plans/2026-06-08-explicit-local-auth.md",
+    "docs/plans/2026-06-08-local-auth-unavailable-reasons.md",
     "docs/plans/2026-06-08-touch-id-baseline.md",
     "docs/readme-overview.svg",
     "touchid.xcodeproj/project.pbxproj",
@@ -215,6 +216,8 @@ def check_local_authentication_flow() -> None:
         "LAError.SystemCancel.rawValue",
         "LAError.PasscodeNotSet.rawValue",
         "LAError.UserFallback.rawValue",
+        "LAError.TouchIDNotAvailable.rawValue",
+        "LAError.TouchIDNotEnrolled.rawValue",
     ]:
         require_contains(source, token, "ViewController.swift")
 
@@ -245,25 +248,27 @@ def check_docs() -> None:
         require_contains(gitignore, token, ".gitignore")
 
     readme = flattened(read_text("README.md"))
-    for token in ["make check", "build.sh", "scripts/check-baseline.py", "LocalAuthentication", "local biometric", "authentication-state logging"]:
+    for token in ["make check", "build.sh", "scripts/check-baseline.py", "LocalAuthentication", "local biometric", "authentication-state logging", "unavailable biometric"]:
         require_contains(readme, token, "README.md")
 
     vision = flattened(read_text("VISION.md"))
-    for token in ["scripts/check-baseline.py", "build script", "local biometric", "server identity", "authentication-state logging"]:
+    for token in ["scripts/check-baseline.py", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric"]:
         require_contains(vision, token, "VISION.md")
 
     security = flattened(read_text("SECURITY.md"))
-    for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "authentication-state logging"]:
+    for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "authentication-state logging", "unavailable biometric"]:
         require_contains(security, token, "SECURITY.md")
 
     changes = flattened(read_text("CHANGES.md"))
-    for token in ["console logging", "callback error", "in-memory state", "explicit", "build.sh", "make check", "local-only privacy"]:
+    for token in ["console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "build.sh", "make check", "local-only privacy"]:
         require_contains(changes, token, "CHANGES.md")
 
     plan = flattened(read_text("docs/plans/2026-06-08-touch-id-baseline.md"))
     require_contains(plan, "status: completed", "baseline plan")
     explicit_plan = flattened(read_text("docs/plans/2026-06-08-explicit-local-auth.md"))
     require_contains(explicit_plan, "status: completed", "explicit auth plan")
+    unavailable_plan = flattened(read_text("docs/plans/2026-06-08-local-auth-unavailable-reasons.md"))
+    require_contains(unavailable_plan, "status: completed", "unavailable auth plan")
 
 
 def main() -> None:

@@ -10,6 +10,8 @@
   capture instead of logging them.
 - Made local biometric authentication explicit and user-triggered instead of
   starting automatically when the view loads.
+- Classified unavailable biometric hardware and unenrolled biometric states
+  without logging or remote handling.
 - Updated the sample prompt to describe local authentication instead of server
   login.
 - Added a POSIX-compatible `build.sh` that skips cleanly on hosts without Xcode.

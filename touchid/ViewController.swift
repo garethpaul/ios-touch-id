@@ -102,6 +102,10 @@ class ViewController: UIViewController {
             return "passcode not set"
         case LAError.UserFallback.rawValue:
             return "user chose password"
+        case LAError.TouchIDNotAvailable.rawValue:
+            return "touch id unavailable"
+        case LAError.TouchIDNotEnrolled.rawValue:
+            return "touch id not enrolled"
         default:
             return "unable to authenticate user"
         }
