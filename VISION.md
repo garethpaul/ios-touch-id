@@ -23,6 +23,7 @@ states are classified locally with failure reason tests.
 The error domain guard keeps unrelated errors on the generic local failure path.
 The fallback title remains hidden because the sample does not implement an
 alternate password flow.
+The in-progress title should visibly show when local authentication is running.
 The accessibility text should describe the local biometric action and in-progress
 state without implying remote credential transfer.
 
@@ -37,6 +38,7 @@ Priority:
 - Keep failure reason tests focused on local error classification
 - Keep the error domain guard around LocalAuthentication failure codes
 - Keep the LocalAuthentication fallback title hidden unless a real fallback flow exists
+- Keep the in-progress title aligned with local-only authentication state
 - Keep local authentication accessibility text aligned with the local-only privacy boundary
 - Avoid treating biometric success as remote identity proof
 - Keep the sample clear that local biometric success is not server identity
@@ -72,8 +74,8 @@ Biometric authentication should remain local and explicit. Do not log biometric
 state, store sensitive secrets without keychain guidance, or use local success as
 unverified server identity. The error domain guard should keep unrelated errors
 out of LocalAuthentication failure reason mapping. The fallback title should stay
-hidden until the sample implements an explicit fallback flow. The accessibility text
-should keep the action and in-progress state local-only.
+hidden until the sample implements an explicit fallback flow. The in-progress title
+and accessibility text should keep the action and in-progress state local-only.
 
 ## What We Will Not Merge (For Now)
 

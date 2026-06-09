@@ -32,6 +32,7 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-09-local-auth-error-domain.md",
     "docs/plans/2026-06-09-local-auth-fallback-title.md",
     "docs/plans/2026-06-09-local-auth-accessibility.md",
+    "docs/plans/2026-06-09-local-auth-in-progress-title.md",
     "docs/readme-overview.svg",
     "touchid.xcodeproj/project.pbxproj",
     "touchid.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
@@ -221,8 +222,10 @@ def check_local_authentication_flow() -> None:
         "private var authenticationInProgress = false",
         "configureAuthenticationButton()",
         "private func describeReadyAuthenticationButton()",
+        'authenticateButton.setTitle("Authenticate Locally", forState: UIControlState.Normal)',
         'authenticateButton.accessibilityLabel = "Authenticate Locally"',
         'authenticateButton.accessibilityHint = "Starts local biometric authentication without sending credentials"',
+        'authenticateButton.setTitle("Authenticating...", forState: UIControlState.Disabled)',
         'authenticateButton.accessibilityLabel = "Authenticating Locally"',
         'authenticateButton.accessibilityHint = "Local biometric authentication is in progress"',
         'addTarget(self, action: "authenticateButtonTapped:", forControlEvents: UIControlEvents.TouchUpInside)',
@@ -262,6 +265,7 @@ def check_local_authentication_flow() -> None:
         "if authenticationInProgress",
         "authenticationInProgress = true",
         "authenticationMessage = \"authentication started\"",
+        "authenticateButton.setTitle(\"Authenticating...\", forState: UIControlState.Disabled)",
         "authenticateButton.enabled = false",
         "authenticateButton.accessibilityLabel = \"Authenticating Locally\"",
         "authenticateButton.accessibilityHint = \"Local biometric authentication is in progress\"",
@@ -271,6 +275,10 @@ def check_local_authentication_flow() -> None:
         require_contains(auth_flow, token, "authenticateWithBiometrics")
     if auth_flow.count("describeReadyAuthenticationButton()") < 2:
         fail("authenticateWithBiometrics must restore ready accessibility text after callback and preflight completion")
+    in_progress_title_index = auth_flow.find('authenticateButton.setTitle("Authenticating...", forState: UIControlState.Disabled)')
+    disable_button_index = auth_flow.find("authenticateButton.enabled = false", in_progress_title_index)
+    if in_progress_title_index == -1 or disable_button_index == -1 or in_progress_title_index > disable_button_index:
+        fail("authenticateWithBiometrics must set the disabled in-progress title before disabling the button")
 
     for pattern in FORBIDDEN_SOURCE_PATTERNS:
         if re.search(pattern, source, flags=re.IGNORECASE):
@@ -290,21 +298,25 @@ def check_docs() -> None:
     for token in ["make lint", "make test", "make build", "make check", "build.sh", "scripts/check-baseline.py", "LocalAuthentication", "local biometric", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
         require_contains(readme, token, "README.md")
     require_contains(readme, "error domain guard", "README.md")
+    require_contains(readme, "in-progress title", "README.md")
 
     vision = flattened(read_text("VISION.md"))
     for token in ["scripts/check-baseline.py", "make lint", "make test", "make build", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
         require_contains(vision, token, "VISION.md")
     require_contains(vision, "error domain guard", "VISION.md")
+    require_contains(vision, "in-progress title", "VISION.md")
 
     security = flattened(read_text("SECURITY.md"))
     for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
         require_contains(security, token, "SECURITY.md")
     require_contains(security, "error domain guard", "SECURITY.md")
+    require_contains(security, "in-progress title", "SECURITY.md")
 
     changes = flattened(read_text("CHANGES.md"))
     for token in ["console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "build.sh", "make lint", "make test", "make build", "make check", "local-only privacy"]:
         require_contains(changes, token, "CHANGES.md")
     require_contains(changes, "error domain guard", "CHANGES.md")
+    require_contains(changes, "in-progress title", "CHANGES.md")
 
     make_gates_plan = flattened(read_text("docs/plans/2026-06-09-make-gate-aliases.md"))
     require_contains(make_gates_plan, "status: completed", "make gate aliases plan")
@@ -322,6 +334,8 @@ def check_docs() -> None:
     require_contains(fallback_title_plan, "status: completed", "fallback title plan")
     accessibility_plan = flattened(read_text("docs/plans/2026-06-09-local-auth-accessibility.md"))
     require_contains(accessibility_plan, "status: completed", "accessibility plan")
+    in_progress_title_plan = flattened(read_text("docs/plans/2026-06-09-local-auth-in-progress-title.md"))
+    require_contains(in_progress_title_plan, "status: completed", "in-progress title plan")
 
 
 def main() -> None:

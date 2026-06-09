@@ -6,6 +6,7 @@
   static LocalAuthentication baseline.
 - Added accessibility text for the local biometric action and in-progress
   authentication state.
+- Added an in-progress title while local biometric authentication is running.
 
 ## 2026-06-08
 

@@ -21,7 +21,6 @@ class ViewController: UIViewController {
     }
 
     private func configureAuthenticationButton() {
-        authenticateButton.setTitle("Authenticate Locally", forState: UIControlState.Normal)
         describeReadyAuthenticationButton()
         authenticateButton.addTarget(self, action: "authenticateButtonTapped:", forControlEvents: UIControlEvents.TouchUpInside)
         authenticateButton.translatesAutoresizingMaskIntoConstraints = false
@@ -46,6 +45,7 @@ class ViewController: UIViewController {
     }
 
     private func describeReadyAuthenticationButton() {
+        authenticateButton.setTitle("Authenticate Locally", forState: UIControlState.Normal)
         authenticateButton.accessibilityLabel = "Authenticate Locally"
         authenticateButton.accessibilityHint = "Starts local biometric authentication without sending credentials"
     }
@@ -61,6 +61,7 @@ class ViewController: UIViewController {
 
         authenticationInProgress = true
         authenticationMessage = "authentication started"
+        authenticateButton.setTitle("Authenticating...", forState: UIControlState.Disabled)
         authenticateButton.enabled = false
         authenticateButton.accessibilityLabel = "Authenticating Locally"
         authenticateButton.accessibilityHint = "Local biometric authentication is in progress"

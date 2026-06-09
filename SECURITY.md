@@ -33,9 +33,9 @@ Helpful reports include:
   log them. The failure reason tests should cover local error classification
   without introducing network or token behavior. The error domain guard should
   keep unrelated errors on the generic local failure path. The fallback title
-  should stay hidden unless the sample adds a real fallback flow. The accessibility
-  text should describe the local biometric action and in-progress state without
-  implying credential transfer.
+  should stay hidden unless the sample adds a real fallback flow. The in-progress
+  title and accessibility text should describe the local biometric action while
+  authentication is running without implying credential transfer.
 - Avoid authentication-state logging, token storage, analytics, upload, or
   network behavior in the sample. Run `make check` after changing the
   authentication flow, project metadata, storyboards, assets, tests, or docs.
