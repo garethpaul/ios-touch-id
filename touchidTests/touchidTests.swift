@@ -8,29 +8,20 @@
 
 import UIKit
 import XCTest
+import LocalAuthentication
+@testable import touchid
 
 class touchidTests: XCTestCase {
-    
-    override func setUp() {
-        super.setUp()
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+
+    func testAuthenticationFailureReasonHandlesUnavailableTouchID() {
+        let controller = ViewController()
+        let error = NSError(domain: LAErrorDomain, code: LAError.TouchIDNotAvailable.rawValue, userInfo: nil)
+        XCTAssertEqual(controller.authenticationFailureReason(error), "touch id unavailable", "Unavailable Touch ID should stay local and specific")
     }
-    
-    override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-        super.tearDown()
+
+    func testAuthenticationFailureReasonHandlesMissingError() {
+        let controller = ViewController()
+        XCTAssertEqual(controller.authenticationFailureReason(nil), "unable to authenticate user", "Missing LocalAuthentication errors should stay generic")
     }
-    
-    func testExample() {
-        // This is an example of a functional test case.
-        XCTAssert(true, "Pass")
-    }
-    
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measureBlock() {
-            // Put the code you want to measure the time of here.
-        }
-    }
-    
+
 }

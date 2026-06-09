@@ -86,7 +86,7 @@ class ViewController: UIViewController {
         }
     }
 
-    private func authenticationFailureReason(error: NSError?) -> String {
+    func authenticationFailureReason(error: NSError?) -> String {
         guard let code = error?.code else {
             return "unable to authenticate user"
         }

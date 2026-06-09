@@ -30,7 +30,8 @@ Helpful reports include:
   proof without a separate server-side authentication design. Biometric prompts
   should remain explicit and user-triggered. The sample should keep unavailable
   biometric hardware and unenrolled biometric states local-only and should not
-  log them.
+  log them. The failure reason tests should cover local error classification
+  without introducing network or token behavior.
 - Avoid authentication-state logging, token storage, analytics, upload, or
   network behavior in the sample. Run `make check` after changing the
   authentication flow, project metadata, storyboards, assets, tests, or docs.

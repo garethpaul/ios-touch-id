@@ -25,6 +25,7 @@ REQUIRED_FILES = [
     "VISION.md",
     "build.sh",
     "docs/plans/2026-06-08-explicit-local-auth.md",
+    "docs/plans/2026-06-08-auth-failure-reason-tests.md",
     "docs/plans/2026-06-08-local-auth-unavailable-reasons.md",
     "docs/plans/2026-06-08-touch-id-baseline.md",
     "docs/readme-overview.svg",
@@ -137,6 +138,7 @@ def check_required_files() -> None:
 
 def check_project_metadata() -> None:
     project = read_text("touchid.xcodeproj/project.pbxproj")
+    tests = read_text("touchidTests/touchidTests.swift")
     build_script = read_text("build.sh")
     shell_result = subprocess.run(["sh", "-n", "build.sh"], cwd=str(ROOT), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if shell_result.returncode != 0:
@@ -158,8 +160,19 @@ def check_project_metadata() -> None:
         "Images.xcassets in Resources",
         "touchidTests.swift in Sources",
         "IPHONEOS_DEPLOYMENT_TARGET = 8.3;",
+        "ENABLE_TESTABILITY = YES;",
     ]:
         require_contains(project, token, "Xcode project")
+    for token in [
+        "import LocalAuthentication",
+        "@testable import touchid",
+        "testAuthenticationFailureReasonHandlesUnavailableTouchID",
+        "testAuthenticationFailureReasonHandlesMissingError",
+        "XCTAssertEqual",
+    ]:
+        require_contains(tests, token, "touchidTests.swift")
+    if "XCTAssert(true" in tests or "testPerformanceExample" in tests:
+        fail("touchidTests.swift must replace template tests with authentication failure reason assertions")
 
     workspace = parse_xml("touchid.xcodeproj/project.xcworkspace/contents.xcworkspacedata")
     if workspace.tag != "Workspace":
@@ -210,6 +223,7 @@ def check_local_authentication_flow() -> None:
         "dispatch_async(dispatch_get_main_queue())",
         "authenticationMessage",
         "authenticationFailureReason(authenticationError)",
+        "func authenticationFailureReason(error: NSError?) -> String",
         "guard let code = error?.code",
         "LAError.AuthenticationFailed.rawValue",
         "LAError.UserCancel.rawValue",
@@ -223,6 +237,8 @@ def check_local_authentication_flow() -> None:
 
     if "error!.code" in source:
         fail("authentication failure handling must not force-unwrap the preflight error")
+    if "private func authenticationFailureReason" in source:
+        fail("authenticationFailureReason must remain testable from XCTest")
     if "configureAuthenticationButton()" not in view_did_load or "authenticateWithBiometrics()" in view_did_load:
         fail("viewDidLoad must configure the explicit auth action without starting biometric authentication")
     if "authenticateWithBiometrics()" not in auth_action:
@@ -248,19 +264,19 @@ def check_docs() -> None:
         require_contains(gitignore, token, ".gitignore")
 
     readme = flattened(read_text("README.md"))
-    for token in ["make check", "build.sh", "scripts/check-baseline.py", "LocalAuthentication", "local biometric", "authentication-state logging", "unavailable biometric"]:
+    for token in ["make check", "build.sh", "scripts/check-baseline.py", "LocalAuthentication", "local biometric", "authentication-state logging", "unavailable biometric", "failure reason tests"]:
         require_contains(readme, token, "README.md")
 
     vision = flattened(read_text("VISION.md"))
-    for token in ["scripts/check-baseline.py", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric"]:
+    for token in ["scripts/check-baseline.py", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric", "failure reason tests"]:
         require_contains(vision, token, "VISION.md")
 
     security = flattened(read_text("SECURITY.md"))
-    for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "authentication-state logging", "unavailable biometric"]:
+    for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "authentication-state logging", "unavailable biometric", "failure reason tests"]:
         require_contains(security, token, "SECURITY.md")
 
     changes = flattened(read_text("CHANGES.md"))
-    for token in ["console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "build.sh", "make check", "local-only privacy"]:
+    for token in ["console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "failure reason tests", "build.sh", "make check", "local-only privacy"]:
         require_contains(changes, token, "CHANGES.md")
 
     plan = flattened(read_text("docs/plans/2026-06-08-touch-id-baseline.md"))
@@ -269,6 +285,8 @@ def check_docs() -> None:
     require_contains(explicit_plan, "status: completed", "explicit auth plan")
     unavailable_plan = flattened(read_text("docs/plans/2026-06-08-local-auth-unavailable-reasons.md"))
     require_contains(unavailable_plan, "status: completed", "unavailable auth plan")
+    failure_reason_plan = flattened(read_text("docs/plans/2026-06-08-auth-failure-reason-tests.md"))
+    require_contains(failure_reason_plan, "status: completed", "failure reason test plan")
 
 
 def main() -> None:

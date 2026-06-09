@@ -19,7 +19,7 @@ logging guardrails. The build script is intentionally small and skips cleanly on
 hosts without Xcode.
 The baseline also verifies that biometric prompts stay behind an explicit user
 action instead of starting from `viewDidLoad`, and that unavailable biometric
-states are classified locally.
+states are classified locally with failure reason tests.
 
 The current focus is:
 
@@ -29,6 +29,7 @@ Priority:
 - Keep the sample easy to build and inspect
 - Keep biometric prompts explicit and user-triggered
 - Keep unavailable biometric paths clear and local-only
+- Keep failure reason tests focused on local error classification
 - Avoid treating biometric success as remote identity proof
 - Keep the sample clear that local biometric success is not server identity
   proof

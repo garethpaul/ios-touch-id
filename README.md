@@ -57,7 +57,8 @@ This is a local biometric sample using `LocalAuthentication`. Tap the local
 authentication button to start the biometric request. Biometric success
 should be treated as a local device signal only, not as server identity proof.
 Unavailable biometric hardware and unenrolled biometric states are handled
-locally. The sample does not define accounts, tokens, networking, uploads, or
+locally, with failure reason tests covering unavailable Touch ID and missing
+errors. The sample does not define accounts, tokens, networking, uploads, or
 analytics.
 
 ## Testing and Verification
@@ -65,7 +66,7 @@ analytics.
 - `make check` runs `scripts/check-baseline.py`, which verifies Xcode project
   wiring, plist/storyboard/asset files, the LocalAuthentication flow, local
   biometric wording, explicit user-triggered authentication, unavailable
-  biometric failure reasons, and static privacy guardrails.
+  biometric failure reasons, failure reason tests, and static privacy guardrails.
 - Full legacy verification uses `./build.sh`, Xcode's test action, or
   `xcodebuild test` with the appropriate target and destination on macOS.
 

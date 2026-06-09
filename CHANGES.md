@@ -12,6 +12,8 @@
   starting automatically when the view loads.
 - Classified unavailable biometric hardware and unenrolled biometric states
   without logging or remote handling.
+- Added failure reason tests for unavailable Touch ID and missing
+  `LocalAuthentication` errors.
 - Updated the sample prompt to describe local authentication instead of server
   login.
 - Added a POSIX-compatible `build.sh` that skips cleanly on hosts without Xcode.
