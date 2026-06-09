@@ -16,6 +16,8 @@
   `LocalAuthentication` errors.
 - Added an error domain guard so unrelated errors are not classified as
   `LocalAuthentication` failures.
+- Hid the LocalAuthentication fallback title and clarified the fallback failure
+  reason so the sample does not imply an unsupported password flow.
 - Updated the sample prompt to describe local authentication instead of server
   login.
 - Added a POSIX-compatible `build.sh` that skips cleanly on hosts without Xcode.

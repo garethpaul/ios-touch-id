@@ -30,4 +30,10 @@ class touchidTests: XCTestCase {
         XCTAssertEqual(controller.authenticationFailureReason(error), "unable to authenticate user", "Non-LocalAuthentication errors should stay generic")
     }
 
+    func testAuthenticationFailureReasonHandlesUserFallback() {
+        let controller = ViewController()
+        let error = NSError(domain: LAErrorDomain, code: LAError.UserFallback.rawValue, userInfo: nil)
+        XCTAssertEqual(controller.authenticationFailureReason(error), "user chose fallback authentication", "Fallback choices should not imply a password flow exists")
+    }
+
 }
