@@ -42,6 +42,9 @@ Additional scan context:
 ```bash
 git clone https://github.com/garethpaul/ios-touch-id.git
 cd ios-touch-id
+make lint
+make test
+make build
 make check
 ```
 
@@ -67,12 +70,16 @@ uploads, or analytics.
 
 ## Testing and Verification
 
-- `make check` runs `scripts/check-baseline.py`, which verifies Xcode project
+- `make lint`, `make test`, `make build`, and `make check` run
+  `scripts/check-baseline.py`, which verifies Xcode project
   wiring, plist/storyboard/asset files, the LocalAuthentication flow, local
   biometric wording, explicit user-triggered authentication, unavailable
   biometric failure reasons, failure reason tests, the error domain guard, the
   hidden fallback title, local authentication accessibility text, and static
   privacy guardrails.
+- The `lint`, `test`, and `build` targets intentionally alias the static
+  baseline on hosts without the legacy Xcode toolchain, so the standard local
+  gate commands stay available while preserving the single source of truth.
 - Full legacy verification uses `./build.sh`, Xcode's test action, or
   `xcodebuild test` with the appropriate target and destination on macOS.
 
@@ -97,10 +104,12 @@ When the required SDK or runtime is unavailable, use static checks and source re
 ## Maintenance Notes
 
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
-- Run `make check` before pushing changes to Swift sources, project metadata,
-  storyboards, app assets, tests, or security documentation.
+- Run `make lint`, `make test`, `make build`, and `make check` before pushing
+  changes to Swift sources, project metadata, storyboards, app assets, tests, or
+  security documentation.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
+- See `docs/plans/2026-06-09-make-gate-aliases.md` for the local gate alias guardrail.
 - See `docs/plans/2026-06-09-local-auth-error-domain.md` for the error domain guardrail.
 - See `docs/plans/2026-06-09-local-auth-fallback-title.md` for the fallback title guardrail.
 - See `docs/plans/2026-06-09-local-auth-accessibility.md` for the local authentication accessibility guardrail.

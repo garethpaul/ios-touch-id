@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Added local `make lint`, `make test`, and `make build` gate aliases for the
+  static LocalAuthentication baseline.
 - Added accessibility text for the local biometric action and in-progress
   authentication state.
 
