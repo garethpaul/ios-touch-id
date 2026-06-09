@@ -64,6 +64,7 @@ class ViewController: UIViewController {
         // Test if TouchID fingerprint authentication is available on the device and a fingerprint has been enrolled.
         if context.canEvaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, error: &error) {
             // evaluate
+            context.localizedFallbackTitle = ""
             let reason = "Authenticate locally to continue"
 
             context.evaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, localizedReason: reason, reply: { [weak self]
