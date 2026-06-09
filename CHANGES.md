@@ -14,6 +14,8 @@
   without logging or remote handling.
 - Added failure reason tests for unavailable Touch ID and missing
   `LocalAuthentication` errors.
+- Added an error domain guard so unrelated errors are not classified as
+  `LocalAuthentication` failures.
 - Updated the sample prompt to describe local authentication instead of server
   login.
 - Added a POSIX-compatible `build.sh` that skips cleanly on hosts without Xcode.

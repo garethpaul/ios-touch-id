@@ -20,6 +20,7 @@ hosts without Xcode.
 The baseline also verifies that biometric prompts stay behind an explicit user
 action instead of starting from `viewDidLoad`, and that unavailable biometric
 states are classified locally with failure reason tests.
+The error domain guard keeps unrelated errors on the generic local failure path.
 
 The current focus is:
 
@@ -30,6 +31,7 @@ Priority:
 - Keep biometric prompts explicit and user-triggered
 - Keep unavailable biometric paths clear and local-only
 - Keep failure reason tests focused on local error classification
+- Keep the error domain guard around LocalAuthentication failure codes
 - Avoid treating biometric success as remote identity proof
 - Keep the sample clear that local biometric success is not server identity
   proof
@@ -59,7 +61,8 @@ Canonical security policy and reporting:
 
 Biometric authentication should remain local and explicit. Do not log biometric
 state, store sensitive secrets without keychain guidance, or use local success as
-unverified server identity.
+unverified server identity. The error domain guard should keep unrelated errors
+out of LocalAuthentication failure reason mapping.
 
 ## What We Will Not Merge (For Now)
 

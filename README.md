@@ -58,15 +58,17 @@ authentication button to start the biometric request. Biometric success
 should be treated as a local device signal only, not as server identity proof.
 Unavailable biometric hardware and unenrolled biometric states are handled
 locally, with failure reason tests covering unavailable Touch ID and missing
-errors. The sample does not define accounts, tokens, networking, uploads, or
-analytics.
+errors. The error domain guard keeps unrelated errors on the generic local
+failure path. The sample does not define accounts, tokens, networking, uploads,
+or analytics.
 
 ## Testing and Verification
 
 - `make check` runs `scripts/check-baseline.py`, which verifies Xcode project
   wiring, plist/storyboard/asset files, the LocalAuthentication flow, local
   biometric wording, explicit user-triggered authentication, unavailable
-  biometric failure reasons, failure reason tests, and static privacy guardrails.
+  biometric failure reasons, failure reason tests, the error domain guard, and
+  static privacy guardrails.
 - Full legacy verification uses `./build.sh`, Xcode's test action, or
   `xcodebuild test` with the appropriate target and destination on macOS.
 
@@ -95,6 +97,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
   storyboards, app assets, tests, or security documentation.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
+- See `docs/plans/2026-06-09-local-auth-error-domain.md` for the error domain guardrail.
 
 ## Contributing
 

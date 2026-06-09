@@ -87,11 +87,11 @@ class ViewController: UIViewController {
     }
 
     func authenticationFailureReason(error: NSError?) -> String {
-        guard let code = error?.code else {
+        guard let authenticationError = error where authenticationError.domain == LAErrorDomain else {
             return "unable to authenticate user"
         }
 
-        switch code {
+        switch authenticationError.code {
         case LAError.AuthenticationFailed.rawValue:
             return "authentication failed"
         case LAError.UserCancel.rawValue:

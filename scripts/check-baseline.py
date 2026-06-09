@@ -28,6 +28,7 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-08-auth-failure-reason-tests.md",
     "docs/plans/2026-06-08-local-auth-unavailable-reasons.md",
     "docs/plans/2026-06-08-touch-id-baseline.md",
+    "docs/plans/2026-06-09-local-auth-error-domain.md",
     "docs/readme-overview.svg",
     "touchid.xcodeproj/project.pbxproj",
     "touchid.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
@@ -168,6 +169,7 @@ def check_project_metadata() -> None:
         "@testable import touchid",
         "testAuthenticationFailureReasonHandlesUnavailableTouchID",
         "testAuthenticationFailureReasonHandlesMissingError",
+        "testAuthenticationFailureReasonRejectsOtherErrorDomains",
         "XCTAssertEqual",
     ]:
         require_contains(tests, token, "touchidTests.swift")
@@ -224,7 +226,8 @@ def check_local_authentication_flow() -> None:
         "authenticationMessage",
         "authenticationFailureReason(authenticationError)",
         "func authenticationFailureReason(error: NSError?) -> String",
-        "guard let code = error?.code",
+        "authenticationError.domain == LAErrorDomain",
+        "switch authenticationError.code",
         "LAError.AuthenticationFailed.rawValue",
         "LAError.UserCancel.rawValue",
         "LAError.SystemCancel.rawValue",
@@ -266,18 +269,22 @@ def check_docs() -> None:
     readme = flattened(read_text("README.md"))
     for token in ["make check", "build.sh", "scripts/check-baseline.py", "LocalAuthentication", "local biometric", "authentication-state logging", "unavailable biometric", "failure reason tests"]:
         require_contains(readme, token, "README.md")
+    require_contains(readme, "error domain guard", "README.md")
 
     vision = flattened(read_text("VISION.md"))
     for token in ["scripts/check-baseline.py", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric", "failure reason tests"]:
         require_contains(vision, token, "VISION.md")
+    require_contains(vision, "error domain guard", "VISION.md")
 
     security = flattened(read_text("SECURITY.md"))
     for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "authentication-state logging", "unavailable biometric", "failure reason tests"]:
         require_contains(security, token, "SECURITY.md")
+    require_contains(security, "error domain guard", "SECURITY.md")
 
     changes = flattened(read_text("CHANGES.md"))
     for token in ["console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "failure reason tests", "build.sh", "make check", "local-only privacy"]:
         require_contains(changes, token, "CHANGES.md")
+    require_contains(changes, "error domain guard", "CHANGES.md")
 
     plan = flattened(read_text("docs/plans/2026-06-08-touch-id-baseline.md"))
     require_contains(plan, "status: completed", "baseline plan")
@@ -287,6 +294,8 @@ def check_docs() -> None:
     require_contains(unavailable_plan, "status: completed", "unavailable auth plan")
     failure_reason_plan = flattened(read_text("docs/plans/2026-06-08-auth-failure-reason-tests.md"))
     require_contains(failure_reason_plan, "status: completed", "failure reason test plan")
+    error_domain_plan = flattened(read_text("docs/plans/2026-06-09-local-auth-error-domain.md"))
+    require_contains(error_domain_plan, "status: completed", "error domain plan")
 
 
 def main() -> None:

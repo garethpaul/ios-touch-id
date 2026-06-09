@@ -24,4 +24,10 @@ class touchidTests: XCTestCase {
         XCTAssertEqual(controller.authenticationFailureReason(nil), "unable to authenticate user", "Missing LocalAuthentication errors should stay generic")
     }
 
+    func testAuthenticationFailureReasonRejectsOtherErrorDomains() {
+        let controller = ViewController()
+        let error = NSError(domain: "ExampleErrorDomain", code: LAError.TouchIDNotAvailable.rawValue, userInfo: nil)
+        XCTAssertEqual(controller.authenticationFailureReason(error), "unable to authenticate user", "Non-LocalAuthentication errors should stay generic")
+    }
+
 }
