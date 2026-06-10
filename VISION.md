@@ -13,7 +13,8 @@ The goal is to keep the authentication sample small, clear, and safe around
 user identity signals.
 
 Current baseline: `make lint`, `make test`, `make build`, and `make check` run
-`scripts/check-baseline.py` to verify the legacy Xcode project shape,
+`scripts/check-baseline.py` and compile the Swift 5 app and XCTest target when
+Xcode is available. The static checks verify the Xcode project shape,
 plist/storyboard/asset parsing, `LocalAuthentication` source, local biometric
 wording, and authentication-state logging guardrails. The build script is
 intentionally small and skips cleanly on hosts without Xcode.
@@ -43,14 +44,15 @@ Priority:
 - Keep the in-progress title aligned with local-only authentication state
 - Keep local authentication accessibility text aligned with the local-only privacy boundary
 - Keep local authentication accessibility announcements aligned with the local-only privacy boundary
+- Invalidate active authentication contexts off-screen and reject stale callbacks
 - Avoid treating biometric success as remote identity proof
 - Keep the sample clear that local biometric success is not server identity
   proof
 - Maintain security policy, build script, and Xcode project context
 - Keep `make lint`, `make test`, `make build`, and `make check` available as
   local verification gates
-- Keep hosted project validation pinned and read-only on macOS, parsing
-  `touchid.xcodeproj` through the canonical `make check` gate
+- Keep hosted project validation pinned and read-only on macOS, compiling the
+  unsigned app and XCTest target through the canonical `make check` gate
 
 Next priorities:
 
@@ -83,8 +85,8 @@ hidden until the sample implements an explicit fallback flow. The in-progress ti
 and accessibility text should keep the action and in-progress state local-only.
 Accessibility announcements should keep local authentication state changes
 local-only.
-Hosted project validation should remain structural only: it must not invoke
-LocalAuthentication, access biometric state, or imply device-level coverage.
+Hosted project validation must not invoke LocalAuthentication, access biometric
+state, launch a simulator, or imply device-level coverage.
 
 ## What We Will Not Merge (For Now)
 

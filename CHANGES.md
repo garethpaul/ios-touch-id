@@ -2,6 +2,12 @@
 
 ## 2026-06-10
 
+- Migrated the app and failure-reason tests to Swift 5 and iOS 12 with current
+  UIKit and LocalAuthentication APIs.
+- Invalidated active authentication contexts when the screen disappears and
+  ignored stale completion callbacks by attempt identifier.
+- Upgraded `make check` and hosted macOS validation to compile the unsigned app
+  and XCTest target.
 - Added local authentication accessibility announcements for in-progress,
   success, failure, and unavailable biometric states.
 - Added pinned, read-only macOS hosted project validation for the canonical

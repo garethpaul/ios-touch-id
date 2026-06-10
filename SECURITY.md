@@ -42,13 +42,16 @@ Helpful reports include:
   authentication flow, project metadata, storyboards, assets, tests, or docs.
 - `build.sh` is a local Xcode helper only; do not add credential handling,
   network calls, or machine-specific signing material to it.
+- Active LocalAuthentication contexts are invalidated when the screen
+  disappears, and stale completion callbacks must not restore or announce an
+  earlier authentication attempt.
 - Review found authentication, token, or session-related code paths; changes in those areas should receive security-focused review before merge.
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.
 - No primary dependency manifest was detected in the repository root. If dependencies are added later, include a manifest and prefer reproducible installation instructions.
-- The pinned macOS workflow uses read-only repository permissions and parses
-  project metadata without invoking LocalAuthentication, accessing biometric
-  state or credentials, or using signing material.
+- The pinned macOS workflow uses read-only repository permissions and compiles
+  the unsigned app and XCTest target without invoking LocalAuthentication,
+  accessing biometric state or credentials, or using signing material.
 
 ## Mobile Privacy Notes
 

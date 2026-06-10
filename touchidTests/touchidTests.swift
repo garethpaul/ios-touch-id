@@ -11,11 +11,11 @@ import XCTest
 import LocalAuthentication
 @testable import touchid
 
-class touchidTests: XCTestCase {
+final class touchidTests: XCTestCase {
 
     func testAuthenticationFailureReasonHandlesUnavailableTouchID() {
         let controller = ViewController()
-        let error = NSError(domain: LAErrorDomain, code: LAError.TouchIDNotAvailable.rawValue, userInfo: nil)
+        let error = NSError(domain: LAError.errorDomain, code: LAError.Code.biometryNotAvailable.rawValue)
         XCTAssertEqual(controller.authenticationFailureReason(error), "touch id unavailable", "Unavailable Touch ID should stay local and specific")
     }
 
@@ -26,14 +26,20 @@ class touchidTests: XCTestCase {
 
     func testAuthenticationFailureReasonRejectsOtherErrorDomains() {
         let controller = ViewController()
-        let error = NSError(domain: "ExampleErrorDomain", code: LAError.TouchIDNotAvailable.rawValue, userInfo: nil)
+        let error = NSError(domain: "ExampleErrorDomain", code: LAError.Code.biometryNotAvailable.rawValue)
         XCTAssertEqual(controller.authenticationFailureReason(error), "unable to authenticate user", "Non-LocalAuthentication errors should stay generic")
     }
 
     func testAuthenticationFailureReasonHandlesUserFallback() {
         let controller = ViewController()
-        let error = NSError(domain: LAErrorDomain, code: LAError.UserFallback.rawValue, userInfo: nil)
+        let error = NSError(domain: LAError.errorDomain, code: LAError.Code.userFallback.rawValue)
         XCTAssertEqual(controller.authenticationFailureReason(error), "user chose fallback authentication", "Fallback choices should not imply a password flow exists")
+    }
+
+    func testAuthenticationFailureReasonHandlesBiometryLockout() {
+        let controller = ViewController()
+        let error = NSError(domain: LAError.errorDomain, code: LAError.Code.biometryLockout.rawValue)
+        XCTAssertEqual(controller.authenticationFailureReason(error), "touch id locked")
     }
 
 }
