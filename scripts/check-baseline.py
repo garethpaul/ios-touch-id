@@ -33,6 +33,7 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-09-local-auth-fallback-title.md",
     "docs/plans/2026-06-09-local-auth-accessibility.md",
     "docs/plans/2026-06-09-local-auth-in-progress-title.md",
+    "docs/plans/2026-06-10-local-auth-accessibility-announcements.md",
     "docs/readme-overview.svg",
     "touchid.xcodeproj/project.pbxproj",
     "touchid.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
@@ -228,6 +229,9 @@ def check_local_authentication_flow() -> None:
         'authenticateButton.setTitle("Authenticating...", forState: UIControlState.Disabled)',
         'authenticateButton.accessibilityLabel = "Authenticating Locally"',
         'authenticateButton.accessibilityHint = "Local biometric authentication is in progress"',
+        "private func announceAuthenticationStatus(message: String)",
+        "UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, message)",
+        'announceAuthenticationStatus("Authenticating Locally")',
         'addTarget(self, action: "authenticateButtonTapped:", forControlEvents: UIControlEvents.TouchUpInside)',
         "let context = LAContext()",
         "context.canEvaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, error: &error)",
@@ -239,6 +243,8 @@ def check_local_authentication_flow() -> None:
         "authenticationMessage",
         "authenticationFailureReason(authenticationError)",
         "self?.describeReadyAuthenticationButton()",
+        "self?.announceAuthenticationStatus(authenticationMessage)",
+        "announceAuthenticationStatus(authenticationMessage)",
         "func authenticationFailureReason(error: NSError?) -> String",
         "authenticationError.domain == LAErrorDomain",
         "switch authenticationError.code",
@@ -299,24 +305,28 @@ def check_docs() -> None:
         require_contains(readme, token, "README.md")
     require_contains(readme, "error domain guard", "README.md")
     require_contains(readme, "in-progress title", "README.md")
+    require_contains(readme, "accessibility announcements", "README.md")
 
     vision = flattened(read_text("VISION.md"))
     for token in ["scripts/check-baseline.py", "make lint", "make test", "make build", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
         require_contains(vision, token, "VISION.md")
     require_contains(vision, "error domain guard", "VISION.md")
     require_contains(vision, "in-progress title", "VISION.md")
+    require_contains(vision, "accessibility announcements", "VISION.md")
 
     security = flattened(read_text("SECURITY.md"))
     for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
         require_contains(security, token, "SECURITY.md")
     require_contains(security, "error domain guard", "SECURITY.md")
     require_contains(security, "in-progress title", "SECURITY.md")
+    require_contains(security, "accessibility announcements", "SECURITY.md")
 
     changes = flattened(read_text("CHANGES.md"))
     for token in ["console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "build.sh", "make lint", "make test", "make build", "make check", "local-only privacy"]:
         require_contains(changes, token, "CHANGES.md")
     require_contains(changes, "error domain guard", "CHANGES.md")
     require_contains(changes, "in-progress title", "CHANGES.md")
+    require_contains(changes, "accessibility announcements", "CHANGES.md")
 
     make_gates_plan = flattened(read_text("docs/plans/2026-06-09-make-gate-aliases.md"))
     require_contains(make_gates_plan, "status: completed", "make gate aliases plan")
@@ -336,6 +346,8 @@ def check_docs() -> None:
     require_contains(accessibility_plan, "status: completed", "accessibility plan")
     in_progress_title_plan = flattened(read_text("docs/plans/2026-06-09-local-auth-in-progress-title.md"))
     require_contains(in_progress_title_plan, "status: completed", "in-progress title plan")
+    accessibility_announcements_plan = flattened(read_text("docs/plans/2026-06-10-local-auth-accessibility-announcements.md"))
+    require_contains(accessibility_announcements_plan, "status: completed", "accessibility announcements plan")
 
 
 def main() -> None:

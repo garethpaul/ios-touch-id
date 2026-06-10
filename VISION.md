@@ -26,6 +26,8 @@ alternate password flow.
 The in-progress title should visibly show when local authentication is running.
 The accessibility text should describe the local biometric action and in-progress
 state without implying remote credential transfer.
+Accessibility announcements should report local in-progress, success, and
+failure states without implying remote credential transfer.
 
 The current focus is:
 
@@ -40,6 +42,7 @@ Priority:
 - Keep the LocalAuthentication fallback title hidden unless a real fallback flow exists
 - Keep the in-progress title aligned with local-only authentication state
 - Keep local authentication accessibility text aligned with the local-only privacy boundary
+- Keep local authentication accessibility announcements aligned with the local-only privacy boundary
 - Avoid treating biometric success as remote identity proof
 - Keep the sample clear that local biometric success is not server identity
   proof
@@ -76,6 +79,8 @@ unverified server identity. The error domain guard should keep unrelated errors
 out of LocalAuthentication failure reason mapping. The fallback title should stay
 hidden until the sample implements an explicit fallback flow. The in-progress title
 and accessibility text should keep the action and in-progress state local-only.
+Accessibility announcements should keep local authentication state changes
+local-only.
 
 ## What We Will Not Merge (For Now)
 

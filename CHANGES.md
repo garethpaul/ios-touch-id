@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-10
+
+- Added local authentication accessibility announcements for in-progress,
+  success, failure, and unavailable biometric states.
+
 ## 2026-06-09
 
 - Added local `make lint`, `make test`, and `make build` gate aliases for the

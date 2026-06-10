@@ -50,6 +50,10 @@ class ViewController: UIViewController {
         authenticateButton.accessibilityHint = "Starts local biometric authentication without sending credentials"
     }
 
+    private func announceAuthenticationStatus(message: String) {
+        UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, message)
+    }
+
     @IBAction func authenticateButtonTapped(sender: AnyObject) {
         authenticateWithBiometrics()
     }
@@ -65,6 +69,7 @@ class ViewController: UIViewController {
         authenticateButton.enabled = false
         authenticateButton.accessibilityLabel = "Authenticating Locally"
         authenticateButton.accessibilityHint = "Local biometric authentication is in progress"
+        announceAuthenticationStatus("Authenticating Locally")
 
         // Get the local authentication context:
         let context = LAContext()
@@ -88,6 +93,9 @@ class ViewController: UIViewController {
                     } else {
                         self?.authenticationMessage = self?.authenticationFailureReason(authenticationError) ?? "unable to authenticate user"
                     }
+                    if let authenticationMessage = self?.authenticationMessage {
+                        self?.announceAuthenticationStatus(authenticationMessage)
+                    }
                 }
             })
         } else {
@@ -95,6 +103,7 @@ class ViewController: UIViewController {
             authenticateButton.enabled = true
             describeReadyAuthenticationButton()
             authenticationMessage = authenticationFailureReason(error)
+            announceAuthenticationStatus(authenticationMessage)
         }
     }
 
