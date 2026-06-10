@@ -46,6 +46,9 @@ Helpful reports include:
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.
 - No primary dependency manifest was detected in the repository root. If dependencies are added later, include a manifest and prefer reproducible installation instructions.
+- The pinned macOS workflow uses read-only repository permissions and parses
+  project metadata without invoking LocalAuthentication, accessing biometric
+  state or credentials, or using signing material.
 
 ## Mobile Privacy Notes
 

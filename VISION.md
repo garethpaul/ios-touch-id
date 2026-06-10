@@ -49,6 +49,8 @@ Priority:
 - Maintain security policy, build script, and Xcode project context
 - Keep `make lint`, `make test`, `make build`, and `make check` available as
   local verification gates
+- Keep hosted project validation pinned and read-only on macOS, parsing
+  `touchid.xcodeproj` through the canonical `make check` gate
 
 Next priorities:
 
@@ -81,6 +83,8 @@ hidden until the sample implements an explicit fallback flow. The in-progress ti
 and accessibility text should keep the action and in-progress state local-only.
 Accessibility announcements should keep local authentication state changes
 local-only.
+Hosted project validation should remain structural only: it must not invoke
+LocalAuthentication, access biometric state, or imply device-level coverage.
 
 ## What We Will Not Merge (For Now)
 

@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED_FILES = [
     ".gitignore",
+    ".github/workflows/check.yml",
     "CHANGES.md",
     "Makefile",
     "README.md",
@@ -34,6 +35,7 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-09-local-auth-accessibility.md",
     "docs/plans/2026-06-09-local-auth-in-progress-title.md",
     "docs/plans/2026-06-10-local-auth-accessibility-announcements.md",
+    "docs/plans/2026-06-10-hosted-project-validation.md",
     "docs/readme-overview.svg",
     "touchid.xcodeproj/project.pbxproj",
     "touchid.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
@@ -306,6 +308,8 @@ def check_docs() -> None:
     require_contains(readme, "error domain guard", "README.md")
     require_contains(readme, "in-progress title", "README.md")
     require_contains(readme, "accessibility announcements", "README.md")
+    require_contains(readme, "macos-15", "README.md")
+    require_contains(readme, "xcodebuild -list", "README.md")
 
     vision = flattened(read_text("VISION.md"))
     for token in ["scripts/check-baseline.py", "make lint", "make test", "make build", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
@@ -313,6 +317,7 @@ def check_docs() -> None:
     require_contains(vision, "error domain guard", "VISION.md")
     require_contains(vision, "in-progress title", "VISION.md")
     require_contains(vision, "accessibility announcements", "VISION.md")
+    require_contains(vision, "hosted project validation", "VISION.md")
 
     security = flattened(read_text("SECURITY.md"))
     for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
@@ -320,6 +325,7 @@ def check_docs() -> None:
     require_contains(security, "error domain guard", "SECURITY.md")
     require_contains(security, "in-progress title", "SECURITY.md")
     require_contains(security, "accessibility announcements", "SECURITY.md")
+    require_contains(security, "read-only", "SECURITY.md")
 
     changes = flattened(read_text("CHANGES.md"))
     for token in ["console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "build.sh", "make lint", "make test", "make build", "make check", "local-only privacy"]:
@@ -327,6 +333,7 @@ def check_docs() -> None:
     require_contains(changes, "error domain guard", "CHANGES.md")
     require_contains(changes, "in-progress title", "CHANGES.md")
     require_contains(changes, "accessibility announcements", "CHANGES.md")
+    require_contains(changes, "hosted project validation", "CHANGES.md")
 
     make_gates_plan = flattened(read_text("docs/plans/2026-06-09-make-gate-aliases.md"))
     require_contains(make_gates_plan, "status: completed", "make gate aliases plan")
@@ -348,6 +355,34 @@ def check_docs() -> None:
     require_contains(in_progress_title_plan, "status: completed", "in-progress title plan")
     accessibility_announcements_plan = flattened(read_text("docs/plans/2026-06-10-local-auth-accessibility-announcements.md"))
     require_contains(accessibility_announcements_plan, "status: completed", "accessibility announcements plan")
+    hosted_validation_plan = flattened(read_text("docs/plans/2026-06-10-hosted-project-validation.md"))
+    require_contains(hosted_validation_plan, "status: completed", "hosted project validation plan")
+
+
+def check_hosted_validation() -> None:
+    workflow = read_text(".github/workflows/check.yml")
+    for token in [
+        "permissions:\n  contents: read",
+        "cancel-in-progress: true",
+        "runs-on: macos-15",
+        "timeout-minutes: 10",
+        "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+        "run: make check",
+    ]:
+        require_contains(workflow, token, ".github/workflows/check.yml")
+
+    if shutil.which("xcodebuild"):
+        result = subprocess.run(
+            ["xcodebuild", "-list", "-project", "touchid.xcodeproj"],
+            cwd=ROOT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if result.returncode != 0:
+            fail("xcodebuild could not parse touchid.xcodeproj: " + result.stderr.strip())
+    else:
+        print("xcodebuild unavailable; static iOS baseline only.")
 
 
 def main() -> None:
@@ -356,9 +391,7 @@ def main() -> None:
     check_app_metadata_and_assets()
     check_local_authentication_flow()
     check_docs()
-
-    if not shutil.which("xcodebuild"):
-        print("xcodebuild unavailable; static iOS baseline only.")
+    check_hosted_validation()
 
     print("ios-touch-id LocalAuthentication baseline checks passed.")
 

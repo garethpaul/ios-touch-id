@@ -4,6 +4,8 @@
 
 - Added local authentication accessibility announcements for in-progress,
   success, failure, and unavailable biometric states.
+- Added pinned, read-only macOS hosted project validation for the canonical
+  `make check` baseline and `touchid.xcodeproj` parsing.
 
 ## 2026-06-09
 

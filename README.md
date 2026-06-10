@@ -82,6 +82,11 @@ accounts, tokens, networking, uploads, or analytics.
 - The `lint`, `test`, and `build` targets intentionally alias the static
   baseline on hosts without the legacy Xcode toolchain, so the standard local
   gate commands stay available while preserving the single source of truth.
+- The pinned GitHub Actions check runs `make check` on `macos-15`. When Xcode is
+  available, the baseline runs `xcodebuild -list -project touchid.xcodeproj` to
+  verify project-file integrity. This hosted project validation does not invoke
+  LocalAuthentication, access biometric state or credentials, perform signing,
+  or claim full legacy Swift build support.
 - Full legacy verification uses `./build.sh`, Xcode's test action, or
   `xcodebuild test` with the appropriate target and destination on macOS.
 
