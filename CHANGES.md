@@ -8,6 +8,8 @@
   ignored stale completion callbacks by attempt identifier.
 - Upgraded `make check` and hosted macOS validation to compile the unsigned app
   and XCTest target.
+- Added a GitHub Actions workflow that runs the Python 3.12 static baseline and
+  unsigned Swift 5/XCTest build for the local-only biometric sample.
 - Added local authentication accessibility announcements for in-progress,
   success, failure, and unavailable biometric states.
 - Added pinned, read-only macOS hosted project validation for the canonical

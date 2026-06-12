@@ -87,6 +87,9 @@ accounts, tokens, networking, uploads, or analytics.
   credentials, launch a simulator, or perform signing.
 - Full device verification uses Xcode's test action or
   `xcodebuild test` with the appropriate target and destination on macOS.
+- GitHub Actions pins Python 3.12 on macOS before running the same `make check`
+  static baseline and unsigned simulator compilation for pushes and pull
+  requests. Biometric interaction and device verification remain manual tasks.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -120,6 +123,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `docs/plans/2026-06-09-local-auth-accessibility.md` for the local authentication accessibility guardrail.
 - See `docs/plans/2026-06-09-local-auth-in-progress-title.md` for the in-progress title guardrail.
 - See `docs/plans/2026-06-10-local-auth-accessibility-announcements.md` for the accessibility announcements guardrail.
+- See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions Python
+  baseline and `docs/plans/2026-06-10-hosted-project-validation.md` for hosted
+  Xcode validation.
 
 ## Contributing
 

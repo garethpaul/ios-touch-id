@@ -35,6 +35,7 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-09-local-auth-accessibility.md",
     "docs/plans/2026-06-09-local-auth-in-progress-title.md",
     "docs/plans/2026-06-10-local-auth-accessibility-announcements.md",
+    "docs/plans/2026-06-10-ci-baseline.md",
     "docs/plans/2026-06-10-hosted-project-validation.md",
     "docs/plans/2026-06-10-swift-5-authentication-build.md",
     "docs/readme-overview.svg",
@@ -316,12 +317,21 @@ def check_docs() -> None:
     for token in [".PHONY: build check lint test", "lint test build: check", "check:\n\tpython3 scripts/check-baseline.py\n\t./build.sh"]:
         require_contains(makefile, token, "Makefile")
 
+    workflow = read_text(".github/workflows/check.yml")
+    for token in [
+        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405",
+        'python-version: "3.12"',
+        "persist-credentials: false",
+        "make check",
+    ]:
+        require_contains(workflow, token, "GitHub Actions workflow")
+
     gitignore = read_text(".gitignore")
     for token in ["DerivedData", "*.xcuserstate", "*.local.xcconfig", "*.secrets.xcconfig", ".env"]:
         require_contains(gitignore, token, ".gitignore")
 
     readme = flattened(read_text("README.md"))
-    for token in ["make lint", "make test", "make build", "make check", "build.sh", "scripts/check-baseline.py", "LocalAuthentication", "local biometric", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
+    for token in ["make lint", "make test", "make build", "make check", "GitHub Actions", "build.sh", "scripts/check-baseline.py", "LocalAuthentication", "local biometric", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
         require_contains(readme, token, "README.md")
     require_contains(readme, "error domain guard", "README.md")
     require_contains(readme, "in-progress title", "README.md")
@@ -330,7 +340,7 @@ def check_docs() -> None:
     require_contains(readme, "compiles the Swift 5 app and XCTest target", "README.md")
 
     vision = flattened(read_text("VISION.md"))
-    for token in ["scripts/check-baseline.py", "make lint", "make test", "make build", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
+    for token in ["scripts/check-baseline.py", "make lint", "make test", "make build", "GitHub Actions", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
         require_contains(vision, token, "VISION.md")
     require_contains(vision, "error domain guard", "VISION.md")
     require_contains(vision, "in-progress title", "VISION.md")
@@ -338,7 +348,7 @@ def check_docs() -> None:
     require_contains(vision, "hosted project validation", "VISION.md")
 
     security = flattened(read_text("SECURITY.md"))
-    for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
+    for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "GitHub Actions", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
         require_contains(security, token, "SECURITY.md")
     require_contains(security, "error domain guard", "SECURITY.md")
     require_contains(security, "in-progress title", "SECURITY.md")
@@ -347,7 +357,7 @@ def check_docs() -> None:
     require_contains(security, "stale completion callbacks", "SECURITY.md")
 
     changes = flattened(read_text("CHANGES.md"))
-    for token in ["console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "build.sh", "make lint", "make test", "make build", "make check", "local-only privacy"]:
+    for token in ["GitHub Actions", "console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "build.sh", "make lint", "make test", "make build", "make check", "local-only privacy"]:
         require_contains(changes, token, "CHANGES.md")
     require_contains(changes, "error domain guard", "CHANGES.md")
     require_contains(changes, "in-progress title", "CHANGES.md")
@@ -376,6 +386,10 @@ def check_docs() -> None:
     require_contains(in_progress_title_plan, "status: completed", "in-progress title plan")
     accessibility_announcements_plan = flattened(read_text("docs/plans/2026-06-10-local-auth-accessibility-announcements.md"))
     require_contains(accessibility_announcements_plan, "status: completed", "accessibility announcements plan")
+    ci_plan = flattened(read_text("docs/plans/2026-06-10-ci-baseline.md"))
+    require_contains(ci_plan, "status: completed", "CI baseline plan")
+    require_contains(ci_plan, "GitHub Actions", "CI baseline plan")
+    require_contains(ci_plan, "make check", "CI baseline plan")
     hosted_validation_plan = flattened(read_text("docs/plans/2026-06-10-hosted-project-validation.md"))
     require_contains(hosted_validation_plan, "status: completed", "hosted project validation plan")
     swift_5_plan = flattened(read_text("docs/plans/2026-06-10-swift-5-authentication-build.md"))
@@ -390,9 +404,27 @@ def check_hosted_validation() -> None:
         "runs-on: macos-15",
         "timeout-minutes: 10",
         "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+        "persist-credentials: false",
+        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405",
+        'python-version: "3.12"',
         "run: make check",
     ]:
         require_contains(workflow, token, ".github/workflows/check.yml")
+
+    if workflow.count("permissions:") != 1:
+        fail("GitHub Actions must define exactly one permissions block")
+    if re.search(r"^\s+[A-Za-z-]+:\s+write\s*$", workflow, flags=re.MULTILINE):
+        fail("GitHub Actions permissions must remain read-only")
+
+    actions = re.findall(r"^\s*(?:-\s*)?uses:\s*(\S+)\s*$", workflow, flags=re.MULTILINE)
+    expected_actions = [
+        "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405",
+    ]
+    if actions != expected_actions:
+        fail("GitHub Actions must use only the expected pinned checkout and Python actions")
+    if workflow.count("persist-credentials: false") != 1:
+        fail("GitHub Actions checkout must disable credential persistence exactly once")
 
     if shutil.which("xcodebuild"):
         result = subprocess.run(

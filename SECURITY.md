@@ -45,6 +45,9 @@ Helpful reports include:
 - Active LocalAuthentication contexts are invalidated when the screen
   disappears, and stale completion callbacks must not restore or announce an
   earlier authentication attempt.
+- GitHub Actions runs the static checks and an unsigned simulator compilation
+  only. Do not add credential handling, deployment, remote authentication, or
+  live biometric service steps without a separate privacy and security review.
 - Review found authentication, token, or session-related code paths; changes in those areas should receive security-focused review before merge.
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.

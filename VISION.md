@@ -53,6 +53,8 @@ Priority:
   local verification gates
 - Keep hosted project validation pinned and read-only on macOS, compiling the
   unsigned app and XCTest target through the canonical `make check` gate
+- Keep GitHub Actions on Python 3.12 so local and hosted static checks use the
+  same interpreter baseline
 
 Next priorities:
 
