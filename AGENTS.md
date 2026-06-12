@@ -42,7 +42,7 @@
 
 - No required secret or credential file was identified in the repository scan. If you add integrations later, keep secrets out of git.
 - Keep signing material, local `.xcconfig` files, and environment files out of git.
-- Avoid authentication-state logging. Review all changes to `touchid/ViewController.swift` for LocalAuthentication error handling, fallback behavior, explicit user-triggered prompts, and local biometric privacy.
+- Avoid authentication-state logging. Review all changes to `touchid/ViewController.swift` for fail-closed LocalAuthentication result handling, fallback behavior, explicit user-triggered prompts, and local biometric privacy.
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
 - Run `make lint`, `make test`, `make build`, and `make check` before pushing changes to Swift sources, project metadata, storyboards, app assets, tests, or security documentation.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.

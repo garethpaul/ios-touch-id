@@ -79,9 +79,10 @@ class ViewController: UIViewController {
             localizedReason: "Authenticate locally to continue"
         ) { [weak self] success, authenticationError in
             DispatchQueue.main.async {
-                let message = success
-                    ? "authentication succeeded"
-                    : self?.authenticationFailureReason(authenticationError) ?? "unable to authenticate user"
+                let message = self?.authenticationResultMessage(
+                    success: success,
+                    error: authenticationError
+                ) ?? "unable to authenticate user"
                 self?.finishAuthentication(attempt: attempt, message: message)
             }
         }
@@ -99,6 +100,14 @@ class ViewController: UIViewController {
         describeReadyAuthenticationButton()
         authenticationMessage = message
         announceAuthenticationStatus(message)
+    }
+
+    func authenticationResultMessage(success: Bool, error: Error?) -> String {
+        guard success, error == nil else {
+            return authenticationFailureReason(error)
+        }
+
+        return "authentication succeeded"
     }
 
     func authenticationFailureReason(_ error: Error?) -> String {

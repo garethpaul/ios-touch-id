@@ -1,6 +1,6 @@
 # Fail-Closed Authentication Result
 
-status: planned
+status: completed
 
 ## Context
 
@@ -9,7 +9,7 @@ framework's Boolean result is true. The documented callback contract should not
 pair `success == true` with an error, but authentication UI should not announce
 success if a contradictory result is ever delivered.
 
-## Scope
+## Completed Scope
 
 - Normalize completion results through a testable helper.
 - Report success only when the success flag is true and the error is nil.
@@ -26,3 +26,5 @@ success if a contradictory result is ever delivered.
 - `make check`
 - `python3 -m py_compile scripts/check-baseline.py`
 - `git diff --check`
+- Mutation result: removing the nil-error success requirement was rejected by
+  `scripts/check-baseline.py`.
