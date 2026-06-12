@@ -57,7 +57,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   the app and XCTest target for the simulator without code signing.
 
 This is a local biometric sample using `LocalAuthentication`. Tap the local
-authentication button to start the biometric request. Biometric success
+authentication button to start the biometric request. Completion handling fails
+closed unless LocalAuthentication reports success with no error. Biometric success
 should be treated as a local device signal only, not as server identity proof.
 Unavailable biometric hardware and unenrolled biometric states are handled
 locally, with failure reason tests covering unavailable Touch ID and missing
@@ -75,8 +76,9 @@ accounts, tokens, networking, uploads, or analytics.
   `scripts/check-baseline.py`, which verifies Xcode project
   wiring, plist/storyboard/asset files, the LocalAuthentication flow, local
   biometric wording, explicit user-triggered authentication, unavailable
-  biometric failure reasons, failure reason tests, the error domain guard, the
-  hidden fallback title, the in-progress title, local authentication
+  biometric failure reasons, failure reason tests, fail-closed callback result
+  normalization, the error domain guard, the hidden fallback title, the
+  in-progress title, local authentication
   accessibility text, accessibility announcements, and static privacy
   guardrails.
 - The `lint`, `test`, and `build` targets use the same gate. On hosts without

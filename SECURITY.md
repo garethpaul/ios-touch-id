@@ -37,6 +37,8 @@ Helpful reports include:
   title, accessibility text, and accessibility announcements should describe the
   local biometric action while authentication is running without implying
   credential transfer.
+- LocalAuthentication callback results must fail closed: announce success only
+  when the success flag is true and no error is present.
 - Avoid authentication-state logging, token storage, analytics, upload, or
   network behavior in the sample. Run `make check` after changing the
   authentication flow, project metadata, storyboards, assets, tests, or docs.

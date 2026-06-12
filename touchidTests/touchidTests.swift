@@ -13,6 +13,23 @@ import LocalAuthentication
 
 final class touchidTests: XCTestCase {
 
+    func testAuthenticationResultMessageHandlesSuccessfulResult() {
+        let controller = ViewController()
+        XCTAssertEqual(controller.authenticationResultMessage(success: true, error: nil), "authentication succeeded")
+    }
+
+    func testAuthenticationResultMessageHandlesFailedResult() {
+        let controller = ViewController()
+        let error = NSError(domain: LAError.errorDomain, code: LAError.Code.authenticationFailed.rawValue)
+        XCTAssertEqual(controller.authenticationResultMessage(success: false, error: error), "authentication failed")
+    }
+
+    func testAuthenticationResultMessageRejectsContradictorySuccess() {
+        let controller = ViewController()
+        let error = NSError(domain: LAError.errorDomain, code: LAError.Code.authenticationFailed.rawValue)
+        XCTAssertEqual(controller.authenticationResultMessage(success: true, error: error), "authentication failed")
+    }
+
     func testAuthenticationFailureReasonHandlesUnavailableTouchID() {
         let controller = ViewController()
         let error = NSError(domain: LAError.errorDomain, code: LAError.Code.biometryNotAvailable.rawValue)

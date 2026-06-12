@@ -38,6 +38,7 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-10-ci-baseline.md",
     "docs/plans/2026-06-10-hosted-project-validation.md",
     "docs/plans/2026-06-10-swift-5-authentication-build.md",
+    "docs/plans/2026-06-12-fail-closed-authentication-result.md",
     "docs/readme-overview.svg",
     "touchid.xcodeproj/project.pbxproj",
     "touchid.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
@@ -185,6 +186,10 @@ def check_project_metadata() -> None:
         "testAuthenticationFailureReasonRejectsOtherErrorDomains",
         "testAuthenticationFailureReasonHandlesUserFallback",
         "testAuthenticationFailureReasonHandlesBiometryLockout",
+        "testAuthenticationResultMessageHandlesSuccessfulResult",
+        "testAuthenticationResultMessageHandlesFailedResult",
+        "testAuthenticationResultMessageRejectsContradictorySuccess",
+        'authenticationResultMessage(success: true, error: error), "authentication failed"',
         "LAError.errorDomain",
         "LAError.Code.biometryNotAvailable.rawValue",
         "XCTAssertEqual",
@@ -258,11 +263,17 @@ def check_local_authentication_flow() -> None:
         "[weak self]",
         "DispatchQueue.main.async",
         "authenticationMessage",
-        "authenticationFailureReason(authenticationError)",
+        "authenticationResultMessage(",
+        "success: success",
+        "error: authenticationError",
         "finishAuthentication(attempt: attempt, message: message)",
         "private func finishAuthentication(attempt: UUID, message: String)",
         "guard authenticationAttempt == attempt",
         "authenticationContext = nil",
+        "func authenticationResultMessage(success: Bool, error: Error?) -> String",
+        "guard success, error == nil else",
+        "return authenticationFailureReason(error)",
+        'return "authentication succeeded"',
         "func authenticationFailureReason(_ error: Error?) -> String",
         "guard let error = error",
         "let authenticationError = error as NSError",
@@ -386,6 +397,9 @@ def check_docs() -> None:
     require_contains(in_progress_title_plan, "status: completed", "in-progress title plan")
     accessibility_announcements_plan = flattened(read_text("docs/plans/2026-06-10-local-auth-accessibility-announcements.md"))
     require_contains(accessibility_announcements_plan, "status: completed", "accessibility announcements plan")
+    fail_closed_result_plan = flattened(read_text("docs/plans/2026-06-12-fail-closed-authentication-result.md")).lower()
+    require_contains(fail_closed_result_plan, "status: completed", "fail-closed authentication result plan")
+    require_contains(fail_closed_result_plan, "mutation", "fail-closed authentication result plan")
     ci_plan = flattened(read_text("docs/plans/2026-06-10-ci-baseline.md"))
     require_contains(ci_plan, "status: completed", "CI baseline plan")
     require_contains(ci_plan, "GitHub Actions", "CI baseline plan")

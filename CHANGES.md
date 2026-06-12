@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-12
+
+- Normalized LocalAuthentication callback results through a tested fail-closed
+  path that requires a true success flag and no accompanying error.
+
 ## 2026-06-10
 
 - Migrated the app and failure-reason tests to Swift 5 and iOS 12 with current
