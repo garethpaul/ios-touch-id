@@ -95,6 +95,14 @@ def flattened(text: str) -> str:
     return " ".join(text.split())
 
 
+def markdown_section(text: str, heading: str) -> str:
+    match = re.search(
+        rf"(?ms)^## {re.escape(heading)}\s*$\n(.*?)(?=^## |\Z)",
+        text,
+    )
+    return match.group(1).strip() if match else ""
+
+
 def parse_xml(path: str) -> ET.Element:
     try:
         return ET.parse(ROOT / path).getroot()
@@ -397,9 +405,35 @@ def check_docs() -> None:
     require_contains(in_progress_title_plan, "status: completed", "in-progress title plan")
     accessibility_announcements_plan = flattened(read_text("docs/plans/2026-06-10-local-auth-accessibility-announcements.md"))
     require_contains(accessibility_announcements_plan, "status: completed", "accessibility announcements plan")
-    fail_closed_result_plan = flattened(read_text("docs/plans/2026-06-12-fail-closed-authentication-result.md")).lower()
-    require_contains(fail_closed_result_plan, "status: completed", "fail-closed authentication result plan")
-    require_contains(fail_closed_result_plan, "mutation", "fail-closed authentication result plan")
+    fail_closed_result_plan = read_text("docs/plans/2026-06-12-fail-closed-authentication-result.md")
+    fail_closed_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", fail_closed_result_plan)
+    fail_closed_work = markdown_section(fail_closed_result_plan, "Work Completed")
+    fail_closed_verification = markdown_section(
+        fail_closed_result_plan, "Verification Completed"
+    )
+    if fail_closed_status != ["completed"] or not fail_closed_work:
+        fail("fail-closed authentication result plan must record one completed status and completed work")
+    if not fail_closed_verification or re.search(
+        r"(?i)\b(?:pending|todo|tbd|not run)\b", fail_closed_verification
+    ):
+        fail("fail-closed authentication result plan must record finished verification without pending markers")
+    for evidence in [
+        "make check",
+        "make lint",
+        "make test",
+        "make build",
+        "python3 -m py_compile scripts/check-baseline.py",
+        "sh -n build.sh",
+        "git diff --check",
+        "27395341720",
+        "27395390267",
+        "27402323777",
+        "eaaa0362c6cc9e2f0198486adefac8afa3ddf453",
+        "3f695c1618286e1a9e3bba7c3cf28c7a10a74a67",
+        "guard success, error == nil else",
+        "testAuthenticationResultMessageRejectsContradictorySuccess",
+    ]:
+        require_contains(fail_closed_verification, evidence, "fail-closed authentication result plan")
     ci_plan = flattened(read_text("docs/plans/2026-06-10-ci-baseline.md"))
     require_contains(ci_plan, "status: completed", "CI baseline plan")
     require_contains(ci_plan, "GitHub Actions", "CI baseline plan")
