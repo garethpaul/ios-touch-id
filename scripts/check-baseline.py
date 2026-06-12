@@ -419,7 +419,7 @@ def check_hosted_validation() -> None:
     actions = re.findall(r"^\s*(?:-\s*)?uses:\s*(\S+)\s*$", workflow, flags=re.MULTILINE)
     expected_actions = [
         "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
-        "actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405",
     ]
     if actions != expected_actions:
         fail("GitHub Actions must use only the expected pinned checkout and Python actions")
