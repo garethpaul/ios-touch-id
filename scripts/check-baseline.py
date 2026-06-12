@@ -319,7 +319,7 @@ def check_docs() -> None:
 
     workflow = read_text(".github/workflows/check.yml")
     for token in [
-        "actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405",
         'python-version: "3.12"',
         "persist-credentials: false",
         "make check",
@@ -405,7 +405,7 @@ def check_hosted_validation() -> None:
         "timeout-minutes: 10",
         "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
         "persist-credentials: false",
-        "actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405",
         'python-version: "3.12"',
         "run: make check",
     ]:
