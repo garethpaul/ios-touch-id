@@ -2,10 +2,18 @@
 
 ## 2026-06-10
 
-- Added a GitHub Actions workflow that runs the SDK-free `make check` baseline
-  for the local-only biometric sample.
+- Migrated the app and failure-reason tests to Swift 5 and iOS 12 with current
+  UIKit and LocalAuthentication APIs.
+- Invalidated active authentication contexts when the screen disappears and
+  ignored stale completion callbacks by attempt identifier.
+- Upgraded `make check` and hosted macOS validation to compile the unsigned app
+  and XCTest target.
+- Added a GitHub Actions workflow that runs the Python 3.12 static baseline and
+  unsigned Swift 5/XCTest build for the local-only biometric sample.
 - Added local authentication accessibility announcements for in-progress,
   success, failure, and unavailable biometric states.
+- Added pinned, read-only macOS hosted project validation for the canonical
+  `make check` baseline and `touchid.xcodeproj` parsing.
 
 ## 2026-06-09
 

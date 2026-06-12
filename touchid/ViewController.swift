@@ -1,141 +1,136 @@
-//
-//  ViewController.swift
-//  touchid
-//
-//  Created by Gareth on 5/23/15.
-//  Copyright (c) 2015 GarethPaul. All rights reserved.
-//
-
-import UIKit
 import LocalAuthentication
+import UIKit
 
 class ViewController: UIViewController {
-
-    private let authenticateButton = UIButton(type: UIButtonType.System)
+    private let authenticateButton = UIButton(type: .system)
     private var authenticationInProgress = false
     private var authenticationMessage = "authentication not started"
-    
+    private var authenticationContext: LAContext?
+    private var authenticationAttempt: UUID?
+
     override func viewDidLoad() {
         super.viewDidLoad()
         configureAuthenticationButton()
     }
 
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        authenticationAttempt = nil
+        authenticationContext?.invalidate()
+        authenticationContext = nil
+        authenticationInProgress = false
+        authenticateButton.isEnabled = true
+        describeReadyAuthenticationButton()
+    }
+
     private func configureAuthenticationButton() {
         describeReadyAuthenticationButton()
-        authenticateButton.addTarget(self, action: "authenticateButtonTapped:", forControlEvents: UIControlEvents.TouchUpInside)
+        authenticateButton.addTarget(self, action: #selector(authenticateButtonTapped(_:)), for: .touchUpInside)
         authenticateButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(authenticateButton)
 
-        view.addConstraint(NSLayoutConstraint(
-            item: authenticateButton,
-            attribute: NSLayoutAttribute.CenterX,
-            relatedBy: NSLayoutRelation.Equal,
-            toItem: view,
-            attribute: NSLayoutAttribute.CenterX,
-            multiplier: 1.0,
-            constant: 0.0))
-        view.addConstraint(NSLayoutConstraint(
-            item: authenticateButton,
-            attribute: NSLayoutAttribute.CenterY,
-            relatedBy: NSLayoutRelation.Equal,
-            toItem: view,
-            attribute: NSLayoutAttribute.CenterY,
-            multiplier: 1.0,
-            constant: 0.0))
+        NSLayoutConstraint.activate([
+            authenticateButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            authenticateButton.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+        ])
     }
 
     private func describeReadyAuthenticationButton() {
-        authenticateButton.setTitle("Authenticate Locally", forState: UIControlState.Normal)
+        authenticateButton.setTitle("Authenticate Locally", for: .normal)
         authenticateButton.accessibilityLabel = "Authenticate Locally"
         authenticateButton.accessibilityHint = "Starts local biometric authentication without sending credentials"
     }
 
-    private func announceAuthenticationStatus(message: String) {
-        UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, message)
+    private func announceAuthenticationStatus(_ message: String) {
+        UIAccessibility.post(notification: .announcement, argument: message)
     }
 
-    @IBAction func authenticateButtonTapped(sender: AnyObject) {
+    @IBAction @objc func authenticateButtonTapped(_ sender: Any) {
         authenticateWithBiometrics()
     }
 
     private func authenticateWithBiometrics() {
-        if authenticationInProgress {
+        guard !authenticationInProgress else {
             return
         }
 
         authenticationInProgress = true
         authenticationMessage = "authentication started"
-        authenticateButton.setTitle("Authenticating...", forState: UIControlState.Disabled)
-        authenticateButton.enabled = false
+        authenticateButton.setTitle("Authenticating...", for: .disabled)
+        authenticateButton.isEnabled = false
         authenticateButton.accessibilityLabel = "Authenticating Locally"
         authenticateButton.accessibilityHint = "Local biometric authentication is in progress"
         announceAuthenticationStatus("Authenticating Locally")
 
-        // Get the local authentication context:
         let context = LAContext()
-        var error : NSError?
-        
-        // Test if TouchID fingerprint authentication is available on the device and a fingerprint has been enrolled.
-        if context.canEvaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, error: &error) {
-            // evaluate
-            context.localizedFallbackTitle = ""
-            let reason = "Authenticate locally to continue"
+        let attempt = UUID()
+        authenticationContext = context
+        authenticationAttempt = attempt
+        var error: NSError?
 
-            context.evaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, localizedReason: reason, reply: { [weak self]
-                (success: Bool, authenticationError: NSError?) -> Void in
-                
-                dispatch_async(dispatch_get_main_queue()) {
-                    self?.authenticationInProgress = false
-                    self?.authenticateButton.enabled = true
-                    self?.describeReadyAuthenticationButton()
-                    if success {
-                        self?.authenticationMessage = "authentication succeeded"
-                    } else {
-                        self?.authenticationMessage = self?.authenticationFailureReason(authenticationError) ?? "unable to authenticate user"
-                    }
-                    if let authenticationMessage = self?.authenticationMessage {
-                        self?.announceAuthenticationStatus(authenticationMessage)
-                    }
-                }
-            })
-        } else {
-            authenticationInProgress = false
-            authenticateButton.enabled = true
-            describeReadyAuthenticationButton()
-            authenticationMessage = authenticationFailureReason(error)
-            announceAuthenticationStatus(authenticationMessage)
+        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
+            finishAuthentication(attempt: attempt, message: authenticationFailureReason(error))
+            return
+        }
+
+        context.localizedFallbackTitle = ""
+        context.evaluatePolicy(
+            .deviceOwnerAuthenticationWithBiometrics,
+            localizedReason: "Authenticate locally to continue"
+        ) { [weak self] success, authenticationError in
+            DispatchQueue.main.async {
+                let message = success
+                    ? "authentication succeeded"
+                    : self?.authenticationFailureReason(authenticationError) ?? "unable to authenticate user"
+                self?.finishAuthentication(attempt: attempt, message: message)
+            }
         }
     }
 
-    func authenticationFailureReason(error: NSError?) -> String {
-        guard let authenticationError = error where authenticationError.domain == LAErrorDomain else {
+    private func finishAuthentication(attempt: UUID, message: String) {
+        guard authenticationAttempt == attempt else {
+            return
+        }
+
+        authenticationAttempt = nil
+        authenticationContext = nil
+        authenticationInProgress = false
+        authenticateButton.isEnabled = true
+        describeReadyAuthenticationButton()
+        authenticationMessage = message
+        announceAuthenticationStatus(message)
+    }
+
+    func authenticationFailureReason(_ error: Error?) -> String {
+        guard let error = error else {
             return "unable to authenticate user"
         }
 
-        switch authenticationError.code {
-        case LAError.AuthenticationFailed.rawValue:
+        let authenticationError = error as NSError
+        guard authenticationError.domain == LAError.errorDomain,
+              let code = LAError.Code(rawValue: authenticationError.code) else {
+            return "unable to authenticate user"
+        }
+
+        switch code {
+        case .authenticationFailed:
             return "authentication failed"
-        case LAError.UserCancel.rawValue:
+        case .userCancel:
             return "user canceled authentication"
-        case LAError.SystemCancel.rawValue:
+        case .systemCancel:
             return "system canceled authentication"
-        case LAError.PasscodeNotSet.rawValue:
+        case .passcodeNotSet:
             return "passcode not set"
-        case LAError.UserFallback.rawValue:
+        case .userFallback:
             return "user chose fallback authentication"
-        case LAError.TouchIDNotAvailable.rawValue:
+        case .biometryNotAvailable:
             return "touch id unavailable"
-        case LAError.TouchIDNotEnrolled.rawValue:
+        case .biometryNotEnrolled:
             return "touch id not enrolled"
+        case .biometryLockout:
+            return "touch id locked"
         default:
             return "unable to authenticate user"
         }
     }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-
-
 }

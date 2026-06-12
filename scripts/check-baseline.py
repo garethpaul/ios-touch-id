@@ -17,8 +17,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 REQUIRED_FILES = [
-    ".github/workflows/check.yml",
     ".gitignore",
+    ".github/workflows/check.yml",
     "CHANGES.md",
     "Makefile",
     "README.md",
@@ -36,6 +36,8 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-09-local-auth-in-progress-title.md",
     "docs/plans/2026-06-10-local-auth-accessibility-announcements.md",
     "docs/plans/2026-06-10-ci-baseline.md",
+    "docs/plans/2026-06-10-hosted-project-validation.md",
+    "docs/plans/2026-06-10-swift-5-authentication-build.md",
     "docs/readme-overview.svg",
     "touchid.xcodeproj/project.pbxproj",
     "touchid.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
@@ -152,10 +154,11 @@ def check_project_metadata() -> None:
     if shell_result.returncode != 0:
         fail(f"build.sh must pass POSIX shell syntax checks: {shell_result.stderr.strip()}")
     for token in [
-        "ci_build() {",
         'xcodebuild -project "touchid.xcodeproj"',
-        '-target "touchid"',
-        'ci_build "${SIMULATOR_NAME:-iPhone 6}"',
+        '-target "touchidTests"',
+        "-sdk iphonesimulator",
+        'configuration "Debug"',
+        "CODE_SIGNING_ALLOWED=NO",
         "xcodebuild unavailable",
     ]:
         require_contains(build_script, token, "build.sh")
@@ -167,10 +170,13 @@ def check_project_metadata() -> None:
         "Main.storyboard in Resources",
         "Images.xcassets in Resources",
         "touchidTests.swift in Sources",
-        "IPHONEOS_DEPLOYMENT_TARGET = 8.3;",
         "ENABLE_TESTABILITY = YES;",
     ]:
         require_contains(project, token, "Xcode project")
+    if project.count("IPHONEOS_DEPLOYMENT_TARGET = 12.0;") != 2:
+        fail("Xcode project must use iOS 12 for both project configurations")
+    if project.count("SWIFT_VERSION = 5.0;") != 6:
+        fail("Xcode project must use Swift 5 for every project and target configuration")
     for token in [
         "import LocalAuthentication",
         "@testable import touchid",
@@ -178,6 +184,9 @@ def check_project_metadata() -> None:
         "testAuthenticationFailureReasonHandlesMissingError",
         "testAuthenticationFailureReasonRejectsOtherErrorDomains",
         "testAuthenticationFailureReasonHandlesUserFallback",
+        "testAuthenticationFailureReasonHandlesBiometryLockout",
+        "LAError.errorDomain",
+        "LAError.Code.biometryNotAvailable.rawValue",
         "XCTAssertEqual",
     ]:
         require_contains(tests, token, "touchidTests.swift")
@@ -221,43 +230,54 @@ def check_local_authentication_flow() -> None:
     auth_flow = swift_function_body(source, "func authenticateWithBiometrics")
     for token in [
         "import LocalAuthentication",
-        "private let authenticateButton = UIButton(type: UIButtonType.System)",
+        "private let authenticateButton = UIButton(type: .system)",
         "private var authenticationInProgress = false",
+        "private var authenticationContext: LAContext?",
+        "private var authenticationAttempt: UUID?",
         "configureAuthenticationButton()",
         "private func describeReadyAuthenticationButton()",
-        'authenticateButton.setTitle("Authenticate Locally", forState: UIControlState.Normal)',
+        'authenticateButton.setTitle("Authenticate Locally", for: .normal)',
         'authenticateButton.accessibilityLabel = "Authenticate Locally"',
         'authenticateButton.accessibilityHint = "Starts local biometric authentication without sending credentials"',
-        'authenticateButton.setTitle("Authenticating...", forState: UIControlState.Disabled)',
+        'authenticateButton.setTitle("Authenticating...", for: .disabled)',
         'authenticateButton.accessibilityLabel = "Authenticating Locally"',
         'authenticateButton.accessibilityHint = "Local biometric authentication is in progress"',
-        "private func announceAuthenticationStatus(message: String)",
-        "UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, message)",
+        "private func announceAuthenticationStatus(_ message: String)",
+        "UIAccessibility.post(notification: .announcement, argument: message)",
         'announceAuthenticationStatus("Authenticating Locally")',
-        'addTarget(self, action: "authenticateButtonTapped:", forControlEvents: UIControlEvents.TouchUpInside)',
+        "addTarget(self, action: #selector(authenticateButtonTapped(_:)), for: .touchUpInside)",
         "let context = LAContext()",
-        "context.canEvaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, error: &error)",
+        "let attempt = UUID()",
+        "authenticationContext = context",
+        "authenticationAttempt = attempt",
+        "context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)",
         'context.localizedFallbackTitle = ""',
-        'let reason = "Authenticate locally to continue"',
-        "context.evaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics",
+        "context.evaluatePolicy(",
+        ".deviceOwnerAuthenticationWithBiometrics",
+        'localizedReason: "Authenticate locally to continue"',
         "[weak self]",
-        "dispatch_async(dispatch_get_main_queue())",
+        "DispatchQueue.main.async",
         "authenticationMessage",
         "authenticationFailureReason(authenticationError)",
-        "self?.describeReadyAuthenticationButton()",
-        "self?.announceAuthenticationStatus(authenticationMessage)",
-        "announceAuthenticationStatus(authenticationMessage)",
-        "func authenticationFailureReason(error: NSError?) -> String",
-        "authenticationError.domain == LAErrorDomain",
-        "switch authenticationError.code",
-        "LAError.AuthenticationFailed.rawValue",
-        "LAError.UserCancel.rawValue",
-        "LAError.SystemCancel.rawValue",
-        "LAError.PasscodeNotSet.rawValue",
-        "LAError.UserFallback.rawValue",
+        "finishAuthentication(attempt: attempt, message: message)",
+        "private func finishAuthentication(attempt: UUID, message: String)",
+        "guard authenticationAttempt == attempt",
+        "authenticationContext = nil",
+        "func authenticationFailureReason(_ error: Error?) -> String",
+        "guard let error = error",
+        "let authenticationError = error as NSError",
+        "authenticationError.domain == LAError.errorDomain",
+        "LAError.Code(rawValue: authenticationError.code)",
+        "switch code",
+        "case .authenticationFailed:",
+        "case .userCancel:",
+        "case .systemCancel:",
+        "case .passcodeNotSet:",
+        "case .userFallback:",
         'return "user chose fallback authentication"',
-        "LAError.TouchIDNotAvailable.rawValue",
-        "LAError.TouchIDNotEnrolled.rawValue",
+        "case .biometryNotAvailable:",
+        "case .biometryNotEnrolled:",
+        "case .biometryLockout:",
     ]:
         require_contains(source, token, "ViewController.swift")
 
@@ -269,22 +289,21 @@ def check_local_authentication_flow() -> None:
         fail("viewDidLoad must configure the explicit auth action without starting biometric authentication")
     if "authenticateWithBiometrics()" not in auth_action:
         fail("authenticateButtonTapped must start the local authentication flow")
+    view_did_disappear = swift_function_body(source, "override func viewDidDisappear")
+    for token in ["authenticationAttempt = nil", "authenticationContext?.invalidate()", "authenticationContext = nil"]:
+        require_contains(view_did_disappear, token, "viewDidDisappear")
     for token in [
-        "if authenticationInProgress",
+        "guard !authenticationInProgress",
         "authenticationInProgress = true",
         "authenticationMessage = \"authentication started\"",
-        "authenticateButton.setTitle(\"Authenticating...\", forState: UIControlState.Disabled)",
-        "authenticateButton.enabled = false",
+        "authenticateButton.setTitle(\"Authenticating...\", for: .disabled)",
+        "authenticateButton.isEnabled = false",
         "authenticateButton.accessibilityLabel = \"Authenticating Locally\"",
         "authenticateButton.accessibilityHint = \"Local biometric authentication is in progress\"",
-        "authenticationInProgress = false",
-        "authenticateButton.enabled = true",
     ]:
         require_contains(auth_flow, token, "authenticateWithBiometrics")
-    if auth_flow.count("describeReadyAuthenticationButton()") < 2:
-        fail("authenticateWithBiometrics must restore ready accessibility text after callback and preflight completion")
-    in_progress_title_index = auth_flow.find('authenticateButton.setTitle("Authenticating...", forState: UIControlState.Disabled)')
-    disable_button_index = auth_flow.find("authenticateButton.enabled = false", in_progress_title_index)
+    in_progress_title_index = auth_flow.find('authenticateButton.setTitle("Authenticating...", for: .disabled)')
+    disable_button_index = auth_flow.find("authenticateButton.isEnabled = false", in_progress_title_index)
     if in_progress_title_index == -1 or disable_button_index == -1 or in_progress_title_index > disable_button_index:
         fail("authenticateWithBiometrics must set the disabled in-progress title before disabling the button")
 
@@ -295,11 +314,16 @@ def check_local_authentication_flow() -> None:
 
 def check_docs() -> None:
     makefile = read_text("Makefile")
-    for token in [".PHONY: build check lint test", "lint test build: check"]:
+    for token in [".PHONY: build check lint test", "lint test build: check", "check:\n\tpython3 scripts/check-baseline.py\n\t./build.sh"]:
         require_contains(makefile, token, "Makefile")
 
     workflow = read_text(".github/workflows/check.yml")
-    for token in ["actions/setup-python@v5", 'python-version: "3.12"', "make check"]:
+    for token in [
+        "actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+        'python-version: "3.12"',
+        "persist-credentials: false",
+        "make check",
+    ]:
         require_contains(workflow, token, "GitHub Actions workflow")
 
     gitignore = read_text(".gitignore")
@@ -312,6 +336,8 @@ def check_docs() -> None:
     require_contains(readme, "error domain guard", "README.md")
     require_contains(readme, "in-progress title", "README.md")
     require_contains(readme, "accessibility announcements", "README.md")
+    require_contains(readme, "macos-15", "README.md")
+    require_contains(readme, "compiles the Swift 5 app and XCTest target", "README.md")
 
     vision = flattened(read_text("VISION.md"))
     for token in ["scripts/check-baseline.py", "make lint", "make test", "make build", "GitHub Actions", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
@@ -319,6 +345,7 @@ def check_docs() -> None:
     require_contains(vision, "error domain guard", "VISION.md")
     require_contains(vision, "in-progress title", "VISION.md")
     require_contains(vision, "accessibility announcements", "VISION.md")
+    require_contains(vision, "hosted project validation", "VISION.md")
 
     security = flattened(read_text("SECURITY.md"))
     for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "GitHub Actions", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
@@ -326,6 +353,8 @@ def check_docs() -> None:
     require_contains(security, "error domain guard", "SECURITY.md")
     require_contains(security, "in-progress title", "SECURITY.md")
     require_contains(security, "accessibility announcements", "SECURITY.md")
+    require_contains(security, "read-only", "SECURITY.md")
+    require_contains(security, "stale completion callbacks", "SECURITY.md")
 
     changes = flattened(read_text("CHANGES.md"))
     for token in ["GitHub Actions", "console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "build.sh", "make lint", "make test", "make build", "make check", "local-only privacy"]:
@@ -333,6 +362,9 @@ def check_docs() -> None:
     require_contains(changes, "error domain guard", "CHANGES.md")
     require_contains(changes, "in-progress title", "CHANGES.md")
     require_contains(changes, "accessibility announcements", "CHANGES.md")
+    require_contains(changes, "hosted project validation", "CHANGES.md")
+    require_contains(changes, "Swift 5", "CHANGES.md")
+    require_contains(changes, "stale completion callbacks", "CHANGES.md")
 
     make_gates_plan = flattened(read_text("docs/plans/2026-06-09-make-gate-aliases.md"))
     require_contains(make_gates_plan, "status: completed", "make gate aliases plan")
@@ -358,6 +390,54 @@ def check_docs() -> None:
     require_contains(ci_plan, "status: completed", "CI baseline plan")
     require_contains(ci_plan, "GitHub Actions", "CI baseline plan")
     require_contains(ci_plan, "make check", "CI baseline plan")
+    hosted_validation_plan = flattened(read_text("docs/plans/2026-06-10-hosted-project-validation.md"))
+    require_contains(hosted_validation_plan, "status: completed", "hosted project validation plan")
+    swift_5_plan = flattened(read_text("docs/plans/2026-06-10-swift-5-authentication-build.md"))
+    require_contains(swift_5_plan, "status: completed", "Swift 5 authentication build plan")
+
+
+def check_hosted_validation() -> None:
+    workflow = read_text(".github/workflows/check.yml")
+    for token in [
+        "permissions:\n  contents: read",
+        "cancel-in-progress: true",
+        "runs-on: macos-15",
+        "timeout-minutes: 10",
+        "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+        "persist-credentials: false",
+        "actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+        'python-version: "3.12"',
+        "run: make check",
+    ]:
+        require_contains(workflow, token, ".github/workflows/check.yml")
+
+    if workflow.count("permissions:") != 1:
+        fail("GitHub Actions must define exactly one permissions block")
+    if re.search(r"^\s+[A-Za-z-]+:\s+write\s*$", workflow, flags=re.MULTILINE):
+        fail("GitHub Actions permissions must remain read-only")
+
+    actions = re.findall(r"^\s*(?:-\s*)?uses:\s*(\S+)\s*$", workflow, flags=re.MULTILINE)
+    expected_actions = [
+        "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+        "actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+    ]
+    if actions != expected_actions:
+        fail("GitHub Actions must use only the expected pinned checkout and Python actions")
+    if workflow.count("persist-credentials: false") != 1:
+        fail("GitHub Actions checkout must disable credential persistence exactly once")
+
+    if shutil.which("xcodebuild"):
+        result = subprocess.run(
+            ["xcodebuild", "-list", "-project", "touchid.xcodeproj"],
+            cwd=ROOT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if result.returncode != 0:
+            fail("xcodebuild could not parse touchid.xcodeproj: " + result.stderr.strip())
+    else:
+        print("xcodebuild unavailable; static iOS baseline only.")
 
 
 def main() -> None:
@@ -366,9 +446,7 @@ def main() -> None:
     check_app_metadata_and_assets()
     check_local_authentication_flow()
     check_docs()
-
-    if not shutil.which("xcodebuild"):
-        print("xcodebuild unavailable; static iOS baseline only.")
+    check_hosted_validation()
 
     print("ios-touch-id LocalAuthentication baseline checks passed.")
 

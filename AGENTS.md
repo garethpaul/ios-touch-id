@@ -22,8 +22,8 @@
 
 ## Coding conventions
 
-- Language mix noted in the README: Swift (3).
-- Preserve legacy Xcode project settings and signing assumptions unless the change is explicitly about modernization.
+- Language mix noted in the README: Swift 5 and Python 3.
+- Preserve the iOS 12 deployment target and unsigned simulator build assumptions unless the change is explicitly about modernization.
 
 ## Testing guidance
 
