@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 REQUIRED_FILES = [
+    ".github/workflows/check.yml",
     ".gitignore",
     "CHANGES.md",
     "Makefile",
@@ -34,6 +35,7 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-09-local-auth-accessibility.md",
     "docs/plans/2026-06-09-local-auth-in-progress-title.md",
     "docs/plans/2026-06-10-local-auth-accessibility-announcements.md",
+    "docs/plans/2026-06-10-ci-baseline.md",
     "docs/readme-overview.svg",
     "touchid.xcodeproj/project.pbxproj",
     "touchid.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
@@ -296,33 +298,37 @@ def check_docs() -> None:
     for token in [".PHONY: build check lint test", "lint test build: check"]:
         require_contains(makefile, token, "Makefile")
 
+    workflow = read_text(".github/workflows/check.yml")
+    for token in ["actions/setup-python@v5", 'python-version: "3.12"', "make check"]:
+        require_contains(workflow, token, "GitHub Actions workflow")
+
     gitignore = read_text(".gitignore")
     for token in ["DerivedData", "*.xcuserstate", "*.local.xcconfig", "*.secrets.xcconfig", ".env"]:
         require_contains(gitignore, token, ".gitignore")
 
     readme = flattened(read_text("README.md"))
-    for token in ["make lint", "make test", "make build", "make check", "build.sh", "scripts/check-baseline.py", "LocalAuthentication", "local biometric", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
+    for token in ["make lint", "make test", "make build", "make check", "GitHub Actions", "build.sh", "scripts/check-baseline.py", "LocalAuthentication", "local biometric", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
         require_contains(readme, token, "README.md")
     require_contains(readme, "error domain guard", "README.md")
     require_contains(readme, "in-progress title", "README.md")
     require_contains(readme, "accessibility announcements", "README.md")
 
     vision = flattened(read_text("VISION.md"))
-    for token in ["scripts/check-baseline.py", "make lint", "make test", "make build", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
+    for token in ["scripts/check-baseline.py", "make lint", "make test", "make build", "GitHub Actions", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
         require_contains(vision, token, "VISION.md")
     require_contains(vision, "error domain guard", "VISION.md")
     require_contains(vision, "in-progress title", "VISION.md")
     require_contains(vision, "accessibility announcements", "VISION.md")
 
     security = flattened(read_text("SECURITY.md"))
-    for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
+    for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "GitHub Actions", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
         require_contains(security, token, "SECURITY.md")
     require_contains(security, "error domain guard", "SECURITY.md")
     require_contains(security, "in-progress title", "SECURITY.md")
     require_contains(security, "accessibility announcements", "SECURITY.md")
 
     changes = flattened(read_text("CHANGES.md"))
-    for token in ["console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "build.sh", "make lint", "make test", "make build", "make check", "local-only privacy"]:
+    for token in ["GitHub Actions", "console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "build.sh", "make lint", "make test", "make build", "make check", "local-only privacy"]:
         require_contains(changes, token, "CHANGES.md")
     require_contains(changes, "error domain guard", "CHANGES.md")
     require_contains(changes, "in-progress title", "CHANGES.md")
@@ -348,6 +354,10 @@ def check_docs() -> None:
     require_contains(in_progress_title_plan, "status: completed", "in-progress title plan")
     accessibility_announcements_plan = flattened(read_text("docs/plans/2026-06-10-local-auth-accessibility-announcements.md"))
     require_contains(accessibility_announcements_plan, "status: completed", "accessibility announcements plan")
+    ci_plan = flattened(read_text("docs/plans/2026-06-10-ci-baseline.md"))
+    require_contains(ci_plan, "status: completed", "CI baseline plan")
+    require_contains(ci_plan, "GitHub Actions", "CI baseline plan")
+    require_contains(ci_plan, "make check", "CI baseline plan")
 
 
 def main() -> None:

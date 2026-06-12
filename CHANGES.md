@@ -2,6 +2,8 @@
 
 ## 2026-06-10
 
+- Added a GitHub Actions workflow that runs the SDK-free `make check` baseline
+  for the local-only biometric sample.
 - Added local authentication accessibility announcements for in-progress,
   success, failure, and unavailable biometric states.
 
