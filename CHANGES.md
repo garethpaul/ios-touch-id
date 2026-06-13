@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-13
+
+- Added terminal context invalidation before accepted authentication attempts
+  clear their retained `LAContext`.
+
 ## 2026-06-12
 
 - Normalized LocalAuthentication callback results through a tested fail-closed

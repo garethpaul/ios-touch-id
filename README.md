@@ -67,7 +67,9 @@ failure path. The LocalAuthentication fallback title is hidden because this
 sample does not implement a password fallback flow. The in-progress title and
 accessibility text describe the local biometric action while authentication is
 running without implying remote credential transfer. Accessibility announcements
-report local in-progress, success, and failure states without moving focus. The sample does not define
+report local in-progress, success, and failure states without moving focus.
+Terminal context invalidation runs for each accepted authentication completion
+before retained LocalAuthentication state is cleared. The sample does not define
 accounts, tokens, networking, uploads, or analytics.
 
 ## Testing and Verification
@@ -125,6 +127,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `docs/plans/2026-06-09-local-auth-accessibility.md` for the local authentication accessibility guardrail.
 - See `docs/plans/2026-06-09-local-auth-in-progress-title.md` for the in-progress title guardrail.
 - See `docs/plans/2026-06-10-local-auth-accessibility-announcements.md` for the accessibility announcements guardrail.
+- See `docs/plans/2026-06-13-completed-auth-context-invalidation.md` for the
+  terminal context invalidation guardrail.
 - See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions Python
   baseline and `docs/plans/2026-06-10-hosted-project-validation.md` for hosted
   Xcode validation.
