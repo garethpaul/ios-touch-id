@@ -40,6 +40,7 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-10-swift-5-authentication-build.md",
     "docs/plans/2026-06-12-fail-closed-authentication-result.md",
     "docs/plans/2026-06-13-completed-auth-context-invalidation.md",
+    "docs/plans/2026-06-13-location-independent-make.md",
     "docs/readme-overview.svg",
     "touchid.xcodeproj/project.pbxproj",
     "touchid.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
@@ -349,8 +350,15 @@ def check_local_authentication_flow() -> None:
 
 def check_docs() -> None:
     makefile = read_text("Makefile")
-    for token in [".PHONY: build check lint test", "lint test build: check", "check:\n\tpython3 scripts/check-baseline.py\n\t./build.sh"]:
+    for token in [
+        ".PHONY: build check lint test",
+        "ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))",
+        "lint test build: check",
+        'check:\n\tpython3 "$(ROOT)/scripts/check-baseline.py"\n\tcd "$(ROOT)" && ./build.sh',
+    ]:
         require_contains(makefile, token, "Makefile")
+    if "python3 scripts/check-baseline.py" in makefile or "\n\t./build.sh" in makefile:
+        fail("Makefile contains caller-relative verification commands")
 
     workflow = read_text(".github/workflows/check.yml")
     for token in [
@@ -454,6 +462,26 @@ def check_docs() -> None:
     require_contains(completed_context_plan, "status: completed", "completed authentication context plan")
     require_contains(completed_context_plan, "All four Make gates", "completed authentication context plan")
     require_contains(completed_context_plan.lower(), "hostile mutations", "completed authentication context plan")
+    location_make_plan = read_text("docs/plans/2026-06-13-location-independent-make.md")
+    location_make_statuses = re.findall(r"^status: .+$", location_make_plan, flags=re.MULTILINE)
+    location_make_verification = markdown_section(location_make_plan, "Verification Completed")
+    if not (
+        location_make_statuses == ["status: completed"]
+        and "All four Make gates passed from the checkout" in location_make_verification
+        and "All four Make gates passed from `/tmp` through the absolute Makefile path" in location_make_verification
+        and "python3 -m py_compile scripts/check-baseline.py" in location_make_verification
+        and "sh -n build.sh" in location_make_verification
+        and "project metadata parsing" in location_make_verification
+        and "git diff --check" in location_make_verification
+        and "`xcodebuild` was unavailable" in location_make_verification
+        and "Six isolated hostile mutations were rejected" in location_make_verification
+        and re.search(r"\b(?:pending|todo|tbd|not run)\b", location_make_verification, re.IGNORECASE) is None
+    ):
+        fail("location-independent Make plan must record completed status and actual local verification")
+    readme = read_text("README.md").lower()
+    changes = read_text("CHANGES.md").lower()
+    require_contains(readme, "absolute makefile path", "README")
+    require_contains(changes, "location-independent", "CHANGES")
     ci_plan = flattened(read_text("docs/plans/2026-06-10-ci-baseline.md"))
     require_contains(ci_plan, "status: completed", "CI baseline plan")
     require_contains(ci_plan, "GitHub Actions", "CI baseline plan")
