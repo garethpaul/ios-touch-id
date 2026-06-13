@@ -93,6 +93,7 @@ class ViewController: UIViewController {
             return
         }
 
+        authenticationContext?.invalidate()
         authenticationAttempt = nil
         authenticationContext = nil
         authenticationInProgress = false

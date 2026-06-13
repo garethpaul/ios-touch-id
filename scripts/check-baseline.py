@@ -39,6 +39,7 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-10-hosted-project-validation.md",
     "docs/plans/2026-06-10-swift-5-authentication-build.md",
     "docs/plans/2026-06-12-fail-closed-authentication-result.md",
+    "docs/plans/2026-06-13-completed-auth-context-invalidation.md",
     "docs/readme-overview.svg",
     "touchid.xcodeproj/project.pbxproj",
     "touchid.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
@@ -311,6 +312,21 @@ def check_local_authentication_flow() -> None:
     view_did_disappear = swift_function_body(source, "override func viewDidDisappear")
     for token in ["authenticationAttempt = nil", "authenticationContext?.invalidate()", "authenticationContext = nil"]:
         require_contains(view_did_disappear, token, "viewDidDisappear")
+    finish_authentication = swift_function_body(source, "private func finishAuthentication")
+    finish_tokens = [
+        "guard authenticationAttempt == attempt",
+        "authenticationContext?.invalidate()",
+        "authenticationAttempt = nil",
+        "authenticationContext = nil",
+        "authenticationInProgress = false",
+        "authenticateButton.isEnabled = true",
+        "describeReadyAuthenticationButton()",
+        "authenticationMessage = message",
+        "announceAuthenticationStatus(message)",
+    ]
+    finish_positions = [finish_authentication.find(token) for token in finish_tokens]
+    if any(position == -1 for position in finish_positions) or finish_positions != sorted(finish_positions):
+        fail("finishAuthentication must validate the attempt, invalidate its context, clear state, restore UI, and announce in order")
     for token in [
         "guard !authenticationInProgress",
         "authenticationInProgress = true",
@@ -350,7 +366,7 @@ def check_docs() -> None:
         require_contains(gitignore, token, ".gitignore")
 
     readme = flattened(read_text("README.md"))
-    for token in ["make lint", "make test", "make build", "make check", "GitHub Actions", "build.sh", "scripts/check-baseline.py", "LocalAuthentication", "local biometric", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
+    for token in ["make lint", "make test", "make build", "make check", "GitHub Actions", "build.sh", "scripts/check-baseline.py", "LocalAuthentication", "local biometric", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "terminal context invalidation"]:
         require_contains(readme, token, "README.md")
     require_contains(readme, "error domain guard", "README.md")
     require_contains(readme, "in-progress title", "README.md")
@@ -359,7 +375,7 @@ def check_docs() -> None:
     require_contains(readme, "compiles the Swift 5 app and XCTest target", "README.md")
 
     vision = flattened(read_text("VISION.md"))
-    for token in ["scripts/check-baseline.py", "make lint", "make test", "make build", "GitHub Actions", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
+    for token in ["scripts/check-baseline.py", "make lint", "make test", "make build", "GitHub Actions", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "terminal context invalidation"]:
         require_contains(vision, token, "VISION.md")
     require_contains(vision, "error domain guard", "VISION.md")
     require_contains(vision, "in-progress title", "VISION.md")
@@ -367,7 +383,7 @@ def check_docs() -> None:
     require_contains(vision, "hosted project validation", "VISION.md")
 
     security = flattened(read_text("SECURITY.md"))
-    for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "GitHub Actions", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
+    for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "GitHub Actions", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "terminal context invalidation"]:
         require_contains(security, token, "SECURITY.md")
     require_contains(security, "error domain guard", "SECURITY.md")
     require_contains(security, "in-progress title", "SECURITY.md")
@@ -376,7 +392,7 @@ def check_docs() -> None:
     require_contains(security, "stale completion callbacks", "SECURITY.md")
 
     changes = flattened(read_text("CHANGES.md"))
-    for token in ["GitHub Actions", "console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "build.sh", "make lint", "make test", "make build", "make check", "local-only privacy"]:
+    for token in ["GitHub Actions", "console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "build.sh", "make lint", "make test", "make build", "make check", "local-only privacy", "terminal context invalidation"]:
         require_contains(changes, token, "CHANGES.md")
     require_contains(changes, "error domain guard", "CHANGES.md")
     require_contains(changes, "in-progress title", "CHANGES.md")
@@ -434,6 +450,10 @@ def check_docs() -> None:
         "testAuthenticationResultMessageRejectsContradictorySuccess",
     ]:
         require_contains(fail_closed_verification, evidence, "fail-closed authentication result plan")
+    completed_context_plan = read_text("docs/plans/2026-06-13-completed-auth-context-invalidation.md")
+    require_contains(completed_context_plan, "status: completed", "completed authentication context plan")
+    require_contains(completed_context_plan, "All four Make gates", "completed authentication context plan")
+    require_contains(completed_context_plan.lower(), "hostile mutations", "completed authentication context plan")
     ci_plan = flattened(read_text("docs/plans/2026-06-10-ci-baseline.md"))
     require_contains(ci_plan, "status: completed", "CI baseline plan")
     require_contains(ci_plan, "GitHub Actions", "CI baseline plan")

@@ -1,6 +1,6 @@
 # Completed Authentication Context Invalidation
 
-status: planned
+status: completed
 
 ## Context
 
@@ -53,17 +53,25 @@ releasing it, while stale callbacks must remain unable to affect a newer attempt
 - Do not claim live biometric validation without Xcode and supported hardware
   or simulator enrollment.
 
-## Verification
+## Work Completed
 
-- `make lint`
-- `make test`
-- `make build`
-- `make check`
-- `python3 -m py_compile scripts/check-baseline.py`
-- Parse plist, storyboard, XIB, workspace, project, workflow, JSON, and SVG
-  metadata with available local parsers.
-- `sh -n build.sh`
-- `git diff --check`
-- Hostile mutations removing invalidation, moving it before attempt validation
-  or after context clearing, weakening stale-attempt rejection, or falsifying
-  plan evidence must be rejected.
+- Invalidated the retained `LAContext` after accepting the current attempt and
+  before clearing authentication state.
+- Preserved stale-attempt rejection, view-disappearance invalidation, UI reset,
+  result assignment, and accessibility announcement behavior.
+- Added function-scoped teardown ordering contracts and documented terminal
+  context ownership.
+
+## Verification Completed
+
+- All four Make gates, `make lint`, `make test`, `make build`, and `make check`,
+  passed against the complete static baseline.
+- `python3 -m py_compile scripts/check-baseline.py`, plist parsing, storyboard,
+  XIB, workspace, and SVG XML parsing, app-icon JSON and workflow YAML parsing,
+  `sh -n build.sh`, and `git diff --check` passed.
+- Eight hostile mutations removing invalidation, moving it before attempt
+  validation or after context clearing, removing or pre-clearing the attempt
+  guard, announcing before state reset, or falsifying plan status or
+  verification evidence were rejected.
+- The local environment did not provide `xcodebuild` or enrolled biometrics, so
+  live LocalAuthentication and simulator/device interaction were not claimed.
