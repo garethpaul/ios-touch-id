@@ -119,6 +119,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Run `make lint`, `make test`, `make build`, and `make check` before pushing
   changes to Swift sources, project metadata, storyboards, app assets, tests, or
   security documentation.
+- The same gates may be invoked through an absolute Makefile path from another
+  directory; verification resolves both commands relative to the checkout.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `docs/plans/2026-06-09-make-gate-aliases.md` for the local gate alias guardrail.
