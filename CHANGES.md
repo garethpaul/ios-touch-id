@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-16
+
+- Executed the focused LocalAuthentication message-mapping XCTest suite on an
+  available hosted iPhone simulator instead of compiling the test target only.
+
 ## 2026-06-13
 
 - Made all Make verification aliases location-independent when invoked through

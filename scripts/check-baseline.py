@@ -41,9 +41,11 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-12-fail-closed-authentication-result.md",
     "docs/plans/2026-06-13-completed-auth-context-invalidation.md",
     "docs/plans/2026-06-13-location-independent-make.md",
+    "docs/plans/2026-06-16-hosted-xctest-execution.md",
     "docs/readme-overview.svg",
     "touchid.xcodeproj/project.pbxproj",
     "touchid.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
+    "touchid.xcodeproj/xcshareddata/xcschemes/touchid.xcscheme",
     "touchid/AppDelegate.swift",
     "touchid/Base.lproj/LaunchScreen.xib",
     "touchid/Base.lproj/Main.storyboard",
@@ -161,20 +163,43 @@ def check_project_metadata() -> None:
     project = read_text("touchid.xcodeproj/project.pbxproj")
     tests = read_text("touchidTests/touchidTests.swift")
     build_script = read_text("build.sh")
+    scheme = read_text("touchid.xcodeproj/xcshareddata/xcschemes/touchid.xcscheme")
     shell_result = subprocess.run(["sh", "-n", "build.sh"], cwd=str(ROOT), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if shell_result.returncode != 0:
         fail(f"build.sh must pass POSIX shell syntax checks: {shell_result.stderr.strip()}")
     for token in [
         'xcodebuild -project "touchid.xcodeproj"',
-        '-target "touchidTests"',
-        "-sdk iphonesimulator",
+        '-scheme "touchid"',
+        '-destination "platform=iOS Simulator,id=$simulator_id"',
+        '-derivedDataPath "$build_root/DerivedData"',
         'configuration "Debug"',
         "CODE_SIGNING_ALLOWED=NO",
+        "CODE_SIGNING_REQUIRED=NO",
+        "xcrun simctl list devices available --json",
+        'startswith("iPhone")',
+        'build_root=$(mktemp -d "${TMPDIR:-/tmp}/ios-touch-id-tests.XXXXXX")',
+        "trap cleanup_build_root 0 1 2 15",
+        "test",
         "xcodebuild unavailable",
     ]:
         require_contains(build_script, token, "build.sh")
     if "function ci_build" in build_script:
         fail("build.sh must use POSIX function syntax")
+    if "-target \"touchidTests\"" in build_script or build_script.rstrip().endswith("build"):
+        fail("build.sh must execute XCTest instead of compiling the test target only")
+
+    scheme_root = parse_xml("touchid.xcodeproj/xcshareddata/xcschemes/touchid.xcscheme")
+    if scheme_root.tag != "Scheme":
+        fail("touchid.xcscheme must describe an Xcode scheme")
+    for token in [
+        'BlueprintIdentifier = "7F2332C81B119134000AF54B"',
+        'BlueprintIdentifier = "7F2332DD1B119134000AF54B"',
+        'BuildableName = "touchidTests.xctest"',
+        '<TestAction',
+        '<TestableReference',
+        'skipped = "NO"',
+    ]:
+        require_contains(scheme, token, "touchid.xcscheme")
 
     for token in [
         "ViewController.swift in Sources",
@@ -365,6 +390,7 @@ def check_docs() -> None:
         "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405",
         'python-version: "3.12"',
         "persist-credentials: false",
+        "Validate baseline and execute XCTest",
         "make check",
     ]:
         require_contains(workflow, token, "GitHub Actions workflow")
@@ -380,7 +406,8 @@ def check_docs() -> None:
     require_contains(readme, "in-progress title", "README.md")
     require_contains(readme, "accessibility announcements", "README.md")
     require_contains(readme, "macos-15", "README.md")
-    require_contains(readme, "compiles the Swift 5 app and XCTest target", "README.md")
+    require_contains(readme, "executes all focused Swift 5 XCTest cases", "README.md")
+    require_contains(readme, "available iPhone simulator", "README.md")
 
     vision = flattened(read_text("VISION.md"))
     for token in ["scripts/check-baseline.py", "make lint", "make test", "make build", "GitHub Actions", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "terminal context invalidation"]:
@@ -389,6 +416,7 @@ def check_docs() -> None:
     require_contains(vision, "in-progress title", "VISION.md")
     require_contains(vision, "accessibility announcements", "VISION.md")
     require_contains(vision, "hosted project validation", "VISION.md")
+    require_contains(vision, "execute the Swift 5 XCTest target", "VISION.md")
 
     security = flattened(read_text("SECURITY.md"))
     for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "GitHub Actions", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "terminal context invalidation"]:
@@ -398,6 +426,7 @@ def check_docs() -> None:
     require_contains(security, "accessibility announcements", "SECURITY.md")
     require_contains(security, "read-only", "SECURITY.md")
     require_contains(security, "stale completion callbacks", "SECURITY.md")
+    require_contains(security, "executes the unsigned focused XCTest target", "SECURITY.md")
 
     changes = flattened(read_text("CHANGES.md"))
     for token in ["GitHub Actions", "console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "build.sh", "make lint", "make test", "make build", "make check", "local-only privacy", "terminal context invalidation"]:
@@ -408,6 +437,20 @@ def check_docs() -> None:
     require_contains(changes, "hosted project validation", "CHANGES.md")
     require_contains(changes, "Swift 5", "CHANGES.md")
     require_contains(changes, "stale completion callbacks", "CHANGES.md")
+    require_contains(changes, "instead of compiling the test target only", "CHANGES.md")
+
+    hosted_xctest_plan = flattened(read_text("docs/plans/2026-06-16-hosted-xctest-execution.md"))
+    for token in [
+        "status: completed",
+        "shared scheme",
+        "available iPhone simulator",
+        "xcodebuild test",
+        "signing disabled",
+        "isolated DerivedData",
+        "hosts without Xcode",
+        "hosted push and pull-request XCTest execution before closure",
+    ]:
+        require_contains(hosted_xctest_plan, token, "hosted XCTest execution plan")
 
     make_gates_plan = flattened(read_text("docs/plans/2026-06-09-make-gate-aliases.md"))
     require_contains(make_gates_plan, "status: completed", "make gate aliases plan")

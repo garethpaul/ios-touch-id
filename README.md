@@ -53,8 +53,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Running or Using the Project
 
 - Open `touchid.xcodeproj` in Xcode, choose the app or sample scheme, and run it on the matching simulator/device.
-- Run `./build.sh` when the required platform toolchain is installed. It builds
-  the app and XCTest target for the simulator without code signing.
+- Run `./build.sh` when the required platform toolchain is installed. It runs
+  the focused XCTest target on an available simulator without code signing.
 
 This is a local biometric sample using `LocalAuthentication`. Tap the local
 authentication button to start the biometric request. Completion handling fails
@@ -84,15 +84,14 @@ accounts, tokens, networking, uploads, or analytics.
   accessibility text, accessibility announcements, and static privacy
   guardrails.
 - The `lint`, `test`, and `build` targets use the same gate. On hosts without
-  Xcode they run the static baseline and skip compilation cleanly.
+  Xcode they run the static baseline and skip XCTest execution cleanly.
 - The pinned GitHub Actions check runs `make check` on `macos-15`. When Xcode is
-  available, the gate compiles the Swift 5 app and XCTest target. This hosted
-  validation does not invoke LocalAuthentication, access biometric state or
-  credentials, launch a simulator, or perform signing.
-- Full device verification uses Xcode's test action or
-  `xcodebuild test` with the appropriate target and destination on macOS.
+  available, the gate selects an available iPhone simulator and executes all
+  focused Swift 5 XCTest cases with signing disabled and isolated DerivedData.
+  These tests do not invoke LocalAuthentication or access biometric state or
+  credentials; physical-device biometric interaction remains manual.
 - GitHub Actions pins Python 3.12 on macOS before running the same `make check`
-  static baseline and unsigned simulator compilation for pushes and pull
+  static baseline and unsigned simulator XCTest execution for pushes and pull
   requests. Biometric interaction and device verification remain manual tasks.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.

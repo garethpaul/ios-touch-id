@@ -13,8 +13,8 @@ The goal is to keep the authentication sample small, clear, and safe around
 user identity signals.
 
 Current baseline: `make lint`, `make test`, `make build`, and `make check` run
-`scripts/check-baseline.py` and compile the Swift 5 app and XCTest target when
-Xcode is available. The static checks verify the Xcode project shape,
+`scripts/check-baseline.py` and execute the Swift 5 XCTest target when Xcode is
+available. The static checks verify the Xcode project shape,
 plist/storyboard/asset parsing, `LocalAuthentication` source, local biometric
 wording, and authentication-state logging guardrails. The build script is
 intentionally small and skips cleanly on hosts without Xcode.
@@ -54,8 +54,8 @@ Priority:
 - Maintain security policy, build script, and Xcode project context
 - Keep `make lint`, `make test`, `make build`, and `make check` available as
   local verification gates
-- Keep hosted project validation pinned and read-only on macOS, compiling the
-  unsigned app and XCTest target through the canonical `make check` gate
+- Keep hosted project validation pinned and read-only on macOS, executing the
+  unsigned focused XCTest target through the canonical `make check` gate
 - Keep GitHub Actions on Python 3.12 so local and hosted static checks use the
   same interpreter baseline
 
@@ -90,8 +90,9 @@ hidden until the sample implements an explicit fallback flow. The in-progress ti
 and accessibility text should keep the action and in-progress state local-only.
 Accessibility announcements should keep local authentication state changes
 local-only.
-Hosted project validation must not invoke LocalAuthentication, access biometric
-state, launch a simulator, or imply device-level coverage.
+Hosted project validation may launch an isolated simulator for deterministic
+XCTest, but must not invoke LocalAuthentication, access biometric state, or
+imply physical-device coverage.
 
 ## What We Will Not Merge (For Now)
 
