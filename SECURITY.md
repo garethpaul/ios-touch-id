@@ -39,6 +39,9 @@ Helpful reports include:
   credential transfer.
 - LocalAuthentication callback results must fail closed: announce success only
   when the success flag is true and no error is present.
+- The Face ID usage description must explain that authentication remains local
+  and on-device; it must not imply credential upload, account login, or server
+  identity proof.
 - Avoid authentication-state logging, token storage, analytics, upload, or
   network behavior in the sample. Run `make check` after changing the
   authentication flow, project metadata, storyboards, assets, tests, or docs.

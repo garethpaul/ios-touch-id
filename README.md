@@ -71,6 +71,8 @@ report local in-progress, success, and failure states without moving focus.
 Terminal context invalidation runs for each accepted authentication completion
 before retained LocalAuthentication state is cleared. The sample does not define
 accounts, tokens, networking, uploads, or analytics.
+The app plist includes a Face ID usage description that keeps the permission
+purpose local and on-device instead of implying account or server authentication.
 
 ## Testing and Verification
 
@@ -82,7 +84,7 @@ accounts, tokens, networking, uploads, or analytics.
   normalization, the error domain guard, the hidden fallback title, the
   in-progress title, local authentication
   accessibility text, accessibility announcements, and static privacy
-  guardrails.
+  guardrails, including the required Face ID purpose string.
 - The `lint`, `test`, and `build` targets use the same gate. On hosts without
   Xcode they run the static baseline and skip XCTest execution cleanly.
 - The pinned GitHub Actions check runs `make check` on `macos-15`. When Xcode is
@@ -108,6 +110,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   `touchid/ViewController.swift` for LocalAuthentication error handling,
   fallback behavior, explicit user-triggered prompts, and local biometric
   privacy.
+- Keep the Face ID usage description aligned with local and on-device
+  authentication; it must not claim remote identity verification.
 - Review changes touching authentication or token handling; examples from the scan include touchid/ViewController.swift.
 - Review changes touching network requests, sockets, or service endpoints; examples from the scan include touchid/Info.plist, touchidTests/Info.plist.
 - Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include touchid/Info.plist, touchidTests/Info.plist.
@@ -130,6 +134,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `docs/plans/2026-06-10-local-auth-accessibility-announcements.md` for the accessibility announcements guardrail.
 - See `docs/plans/2026-06-13-completed-auth-context-invalidation.md` for the
   terminal context invalidation guardrail.
+- See `docs/plans/2026-06-17-019-add-face-id-usage-description-plan.md` for the
+  Face ID privacy-key contract.
 - See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions Python
   baseline and `docs/plans/2026-06-10-hosted-project-validation.md` for hosted
   Xcode validation.

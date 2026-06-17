@@ -14,6 +14,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+FACE_ID_USAGE_DESCRIPTION = "Use Face ID to authenticate locally on this device."
 
 
 REQUIRED_FILES = [
@@ -42,6 +43,7 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-13-completed-auth-context-invalidation.md",
     "docs/plans/2026-06-13-location-independent-make.md",
     "docs/plans/2026-06-16-hosted-xctest-execution.md",
+    "docs/plans/2026-06-17-019-add-face-id-usage-description-plan.md",
     "docs/readme-overview.svg",
     "touchid.xcodeproj/project.pbxproj",
     "touchid.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
@@ -246,6 +248,9 @@ def check_app_metadata_and_assets() -> None:
         fail("touchid Info.plist must point at Main.storyboard")
     if info.get("UILaunchStoryboardName") != "LaunchScreen":
         fail("touchid Info.plist must point at LaunchScreen")
+    face_id_description = info.get("NSFaceIDUsageDescription")
+    if not isinstance(face_id_description, str) or face_id_description.strip() != FACE_ID_USAGE_DESCRIPTION:
+        fail("touchid Info.plist must explain that Face ID authenticates locally on this device")
 
     tests = parse_plist("touchidTests/Info.plist")
     if tests.get("CFBundlePackageType") != "BNDL":
@@ -408,6 +413,8 @@ def check_docs() -> None:
     require_contains(readme, "macos-15", "README.md")
     require_contains(readme, "executes all focused Swift 5 XCTest cases", "README.md")
     require_contains(readme, "available iPhone simulator", "README.md")
+    require_contains(readme, "Face ID usage description", "README.md")
+    require_contains(readme, "local and on-device", "README.md")
 
     vision = flattened(read_text("VISION.md"))
     for token in ["scripts/check-baseline.py", "make lint", "make test", "make build", "GitHub Actions", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "terminal context invalidation"]:
@@ -417,6 +424,8 @@ def check_docs() -> None:
     require_contains(vision, "accessibility announcements", "VISION.md")
     require_contains(vision, "hosted project validation", "VISION.md")
     require_contains(vision, "execute the Swift 5 XCTest target", "VISION.md")
+    require_contains(vision, "Face ID usage description", "VISION.md")
+    require_contains(vision, "local and on-device", "VISION.md")
 
     security = flattened(read_text("SECURITY.md"))
     for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "GitHub Actions", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "terminal context invalidation"]:
@@ -427,6 +436,8 @@ def check_docs() -> None:
     require_contains(security, "read-only", "SECURITY.md")
     require_contains(security, "stale completion callbacks", "SECURITY.md")
     require_contains(security, "executes the unsigned focused XCTest target", "SECURITY.md")
+    require_contains(security, "Face ID usage description", "SECURITY.md")
+    require_contains(security, "local and on-device", "SECURITY.md")
 
     changes = flattened(read_text("CHANGES.md"))
     for token in ["GitHub Actions", "console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "build.sh", "make lint", "make test", "make build", "make check", "local-only privacy", "terminal context invalidation"]:
@@ -438,6 +449,21 @@ def check_docs() -> None:
     require_contains(changes, "Swift 5", "CHANGES.md")
     require_contains(changes, "stale completion callbacks", "CHANGES.md")
     require_contains(changes, "instead of compiling the test target only", "CHANGES.md")
+    require_contains(changes, "Face ID usage description", "CHANGES.md")
+    require_contains(changes, "local and on-device", "CHANGES.md")
+
+    face_id_plan = read_text("docs/plans/2026-06-17-019-add-face-id-usage-description-plan.md")
+    for token in [
+        "title: Face ID Usage Description",
+        "type: fix",
+        "date: 2026-06-17",
+        "R1.",
+        "R6.",
+        "NSFaceIDUsageDescription",
+    ]:
+        require_contains(face_id_plan, token, "Face ID usage description plan")
+    if re.search(r"(?mi)^status:\s*", face_id_plan):
+        fail("Face ID usage description plan must use modern metadata without a legacy status field")
 
     hosted_xctest_plan = flattened(read_text("docs/plans/2026-06-16-hosted-xctest-execution.md"))
     for token in [

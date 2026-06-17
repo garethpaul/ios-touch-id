@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-17
+
+- Added the required Face ID usage description with a local and on-device
+  authentication purpose.
+
 ## 2026-06-16
 
 - Executed the focused LocalAuthentication message-mapping XCTest suite on an

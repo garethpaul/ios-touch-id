@@ -29,6 +29,8 @@ The accessibility text should describe the local biometric action and in-progres
 state without implying remote credential transfer.
 Accessibility announcements should report local in-progress, success, and
 failure states without implying remote credential transfer.
+The Face ID usage description should keep the permission purpose local and
+on-device without implying server authentication.
 
 The current focus is:
 
@@ -44,6 +46,8 @@ Priority:
 - Keep the in-progress title aligned with local-only authentication state
 - Keep local authentication accessibility text aligned with the local-only privacy boundary
 - Keep local authentication accessibility announcements aligned with the local-only privacy boundary
+- Keep the Face ID usage description aligned with local and on-device
+  authentication
 - Invalidate active authentication contexts off-screen and reject stale callbacks
 - Preserve terminal context invalidation for every accepted authentication
   completion path
