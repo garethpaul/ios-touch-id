@@ -134,11 +134,11 @@ class ViewController: UIViewController {
         case .userFallback:
             return "user chose fallback authentication"
         case .biometryNotAvailable:
-            return "touch id unavailable"
+            return "biometric authentication unavailable"
         case .biometryNotEnrolled:
-            return "touch id not enrolled"
+            return "biometric authentication not enrolled"
         case .biometryLockout:
-            return "touch id locked"
+            return "biometric authentication locked"
         default:
             return "unable to authenticate user"
         }

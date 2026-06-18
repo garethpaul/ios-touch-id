@@ -45,6 +45,8 @@
 - Keep the shared `touchid` scheme wired to the focused `touchidTests` target,
   and keep hosted `make check` executing those tests on an available simulator.
 - Avoid authentication-state logging. Review all changes to `touchid/ViewController.swift` for fail-closed LocalAuthentication result handling, fallback behavior, explicit user-triggered prompts, and local biometric privacy.
+- Keep biometric-neutral failure copy aligned across Touch ID and Face ID
+  without weakening error-domain or fail-closed result checks.
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
 - Run `make lint`, `make test`, `make build`, and `make check` before pushing changes to Swift sources, project metadata, storyboards, app assets, tests, or security documentation.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.

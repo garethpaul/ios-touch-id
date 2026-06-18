@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-18
+
+- Replaced Touch ID-specific unavailable, unenrolled, and lockout messages with
+  biometric-neutral failure copy covered by focused XCTest.
+
 ## 2026-06-17
 
 - Added the required Face ID usage description with a local and on-device

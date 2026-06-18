@@ -30,10 +30,16 @@ final class touchidTests: XCTestCase {
         XCTAssertEqual(controller.authenticationResultMessage(success: true, error: error), "authentication failed")
     }
 
-    func testAuthenticationFailureReasonHandlesUnavailableTouchID() {
+    func testAuthenticationFailureReasonHandlesUnavailableBiometrics() {
         let controller = ViewController()
         let error = NSError(domain: LAError.errorDomain, code: LAError.Code.biometryNotAvailable.rawValue)
-        XCTAssertEqual(controller.authenticationFailureReason(error), "touch id unavailable", "Unavailable Touch ID should stay local and specific")
+        XCTAssertEqual(controller.authenticationFailureReason(error), "biometric authentication unavailable", "Unavailable biometrics should stay local and sensor-neutral")
+    }
+
+    func testAuthenticationFailureReasonHandlesUnenrolledBiometrics() {
+        let controller = ViewController()
+        let error = NSError(domain: LAError.errorDomain, code: LAError.Code.biometryNotEnrolled.rawValue)
+        XCTAssertEqual(controller.authenticationFailureReason(error), "biometric authentication not enrolled", "Enrollment guidance should not name an unavailable sensor type")
     }
 
     func testAuthenticationFailureReasonHandlesMissingError() {
@@ -56,7 +62,7 @@ final class touchidTests: XCTestCase {
     func testAuthenticationFailureReasonHandlesBiometryLockout() {
         let controller = ViewController()
         let error = NSError(domain: LAError.errorDomain, code: LAError.Code.biometryLockout.rawValue)
-        XCTAssertEqual(controller.authenticationFailureReason(error), "touch id locked")
+        XCTAssertEqual(controller.authenticationFailureReason(error), "biometric authentication locked")
     }
 
 }

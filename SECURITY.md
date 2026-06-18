@@ -42,6 +42,8 @@ Helpful reports include:
 - The Face ID usage description must explain that authentication remains local
   and on-device; it must not imply credential upload, account login, or server
   identity proof.
+- The biometric-neutral failure copy must avoid claiming a specific sensor while
+  preserving LocalAuthentication error-domain checks.
 - Avoid authentication-state logging, token storage, analytics, upload, or
   network behavior in the sample. Run `make check` after changing the
   authentication flow, project metadata, storyboards, assets, tests, or docs.

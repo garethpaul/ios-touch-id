@@ -44,6 +44,7 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-13-location-independent-make.md",
     "docs/plans/2026-06-16-hosted-xctest-execution.md",
     "docs/plans/2026-06-17-019-add-face-id-usage-description-plan.md",
+    "docs/plans/2026-06-18-biometric-neutral-failure-copy.md",
     "docs/readme-overview.svg",
     "touchid.xcodeproj/project.pbxproj",
     "touchid.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
@@ -218,7 +219,8 @@ def check_project_metadata() -> None:
     for token in [
         "import LocalAuthentication",
         "@testable import touchid",
-        "testAuthenticationFailureReasonHandlesUnavailableTouchID",
+        "testAuthenticationFailureReasonHandlesUnavailableBiometrics",
+        "testAuthenticationFailureReasonHandlesUnenrolledBiometrics",
         "testAuthenticationFailureReasonHandlesMissingError",
         "testAuthenticationFailureReasonRejectsOtherErrorDomains",
         "testAuthenticationFailureReasonHandlesUserFallback",
@@ -329,8 +331,25 @@ def check_local_authentication_flow() -> None:
         "case .biometryNotAvailable:",
         "case .biometryNotEnrolled:",
         "case .biometryLockout:",
+        'return "biometric authentication unavailable"',
+        'return "biometric authentication not enrolled"',
+        'return "biometric authentication locked"',
     ]:
         require_contains(source, token, "ViewController.swift")
+
+    tests = read_text("touchidTests/touchidTests.swift")
+    for token in [
+        "testAuthenticationFailureReasonHandlesUnavailableBiometrics",
+        "testAuthenticationFailureReasonHandlesUnenrolledBiometrics",
+        "testAuthenticationFailureReasonHandlesBiometryLockout",
+        '"biometric authentication unavailable"',
+        '"biometric authentication not enrolled"',
+        '"biometric authentication locked"',
+    ]:
+        require_contains(tests, token, "touchidTests.swift")
+    for stale_copy in ["touch id unavailable", "touch id not enrolled", "touch id locked"]:
+        if stale_copy in source.lower() or stale_copy in tests.lower():
+            fail(f"LocalAuthentication source and tests must not retain stale sensor-specific copy: {stale_copy}")
 
     if "error!.code" in source:
         fail("authentication failure handling must not force-unwrap the preflight error")
@@ -451,6 +470,35 @@ def check_docs() -> None:
     require_contains(changes, "instead of compiling the test target only", "CHANGES.md")
     require_contains(changes, "Face ID usage description", "CHANGES.md")
     require_contains(changes, "local and on-device", "CHANGES.md")
+
+    agent_guidance = flattened(read_text("AGENTS.md"))
+    for document_name, document in [
+        ("README.md", readme),
+        ("VISION.md", vision),
+        ("SECURITY.md", security),
+        ("CHANGES.md", changes),
+        ("AGENTS.md", agent_guidance),
+    ]:
+        require_contains(document, "biometric-neutral failure copy", document_name)
+
+    neutral_copy_plan = read_text("docs/plans/2026-06-18-biometric-neutral-failure-copy.md")
+    neutral_copy_statuses = re.findall(r"(?mi)^status:\s*(.+?)\s*$", neutral_copy_plan)
+    neutral_copy_verification = markdown_section(neutral_copy_plan, "Verification Completed")
+    neutral_copy_required = [
+        "All four Make gates",
+        "absolute Makefile",
+        "python3 -m py_compile scripts/check-baseline.py",
+        "sh -n build.sh",
+        "Seven isolated hostile mutations",
+        "git diff --check",
+        "xcodebuild was unavailable",
+    ]
+    if not (
+        neutral_copy_statuses == ["completed"]
+        and all(token in neutral_copy_verification for token in neutral_copy_required)
+        and re.search(r"(?i)\b(?:pending|todo|tbd|not run)\b", neutral_copy_verification) is None
+    ):
+        fail("biometric-neutral failure-copy plan must record completed verification")
 
     face_id_plan = read_text("docs/plans/2026-06-17-019-add-face-id-usage-description-plan.md")
     for token in [

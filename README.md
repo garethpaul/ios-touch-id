@@ -73,6 +73,8 @@ before retained LocalAuthentication state is cleared. The sample does not define
 accounts, tokens, networking, uploads, or analytics.
 The app plist includes a Face ID usage description that keeps the permission
 purpose local and on-device instead of implying account or server authentication.
+The biometric-neutral failure copy keeps unavailable, unenrolled, and lockout
+status accurate across Touch ID and Face ID hardware.
 
 ## Testing and Verification
 
