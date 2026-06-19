@@ -54,9 +54,9 @@ Helpful reports include:
   earlier authentication attempt.
 - Each terminal context invalidation must occur after accepted-attempt validation
   and before retained LocalAuthentication state is cleared.
-- GitHub Actions runs the static checks and an unsigned simulator compilation
-  only. Do not add credential handling, deployment, remote authentication, or
-  live biometric service steps without a separate privacy and security review.
+- GitHub Actions runs the static checks and an unsigned simulator XCTest target.
+  Do not add credential handling, deployment, remote authentication, or live
+  biometric service steps without a separate privacy and security review.
 - Review found authentication, token, or session-related code paths; changes in those areas should receive security-focused review before merge.
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.

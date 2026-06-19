@@ -179,7 +179,10 @@ def check_project_metadata() -> None:
         "CODE_SIGNING_ALLOWED=NO",
         "CODE_SIGNING_REQUIRED=NO",
         "xcrun simctl list devices available --json",
+        "runtime_match = re.search",
+        r"iOS-(\d+)(?:-(\d+))?",
         'startswith("iPhone")',
+        'device.get("state") == "Booted"',
         'build_root=$(mktemp -d "${TMPDIR:-/tmp}/ios-touch-id-tests.XXXXXX")',
         "trap cleanup_build_root 0 1 2 15",
         "test",
@@ -190,6 +193,8 @@ def check_project_metadata() -> None:
         fail("build.sh must use POSIX function syntax")
     if "-target \"touchidTests\"" in build_script or build_script.rstrip().endswith("build"):
         fail("build.sh must execute XCTest instead of compiling the test target only")
+    if "sorted(devices, reverse=True)" in build_script:
+        fail("build.sh must select simulator runtimes by parsed iOS version, not lexicographic runtime names")
 
     scheme_root = parse_xml("touchid.xcodeproj/xcshareddata/xcschemes/touchid.xcscheme")
     if scheme_root.tag != "Scheme":
@@ -225,12 +230,21 @@ def check_project_metadata() -> None:
         "testAuthenticationFailureReasonRejectsOtherErrorDomains",
         "testAuthenticationFailureReasonHandlesUserFallback",
         "testAuthenticationFailureReasonHandlesBiometryLockout",
+        "testAuthenticationFailureReasonHandlesUserCancel",
+        "testAuthenticationFailureReasonHandlesSystemCancel",
+        "testAuthenticationFailureReasonHandlesPasscodeNotSet",
+        "testAuthenticationFailureReasonHandlesUnknownLocalAuthenticationError",
         "testAuthenticationResultMessageHandlesSuccessfulResult",
         "testAuthenticationResultMessageHandlesFailedResult",
         "testAuthenticationResultMessageRejectsContradictorySuccess",
+        "testAuthenticationResultMessageRejectsMissingErrorFailure",
         'authenticationResultMessage(success: true, error: error), "authentication failed"',
+        'authenticationResultMessage(success: false, error: nil), "unable to authenticate user"',
         "LAError.errorDomain",
         "LAError.Code.biometryNotAvailable.rawValue",
+        "LAError.Code.userCancel.rawValue",
+        "LAError.Code.systemCancel.rawValue",
+        "LAError.Code.passcodeNotSet.rawValue",
         "XCTAssertEqual",
     ]:
         require_contains(tests, token, "touchidTests.swift")
@@ -342,9 +356,18 @@ def check_local_authentication_flow() -> None:
         "testAuthenticationFailureReasonHandlesUnavailableBiometrics",
         "testAuthenticationFailureReasonHandlesUnenrolledBiometrics",
         "testAuthenticationFailureReasonHandlesBiometryLockout",
+        "testAuthenticationFailureReasonHandlesUserCancel",
+        "testAuthenticationFailureReasonHandlesSystemCancel",
+        "testAuthenticationFailureReasonHandlesPasscodeNotSet",
+        "testAuthenticationFailureReasonHandlesUnknownLocalAuthenticationError",
+        "testAuthenticationResultMessageRejectsMissingErrorFailure",
         '"biometric authentication unavailable"',
         '"biometric authentication not enrolled"',
         '"biometric authentication locked"',
+        '"user canceled authentication"',
+        '"system canceled authentication"',
+        '"passcode not set"',
+        '"unable to authenticate user"',
     ]:
         require_contains(tests, token, "touchidTests.swift")
     for stale_copy in ["touch id unavailable", "touch id not enrolled", "touch id locked"]:
@@ -402,11 +425,17 @@ def check_docs() -> None:
     for token in [
         ".PHONY: build check lint test",
         "ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))",
+        "export ROOT",
         "lint test build: check",
-        'check:\n\tpython3 "$(ROOT)/scripts/check-baseline.py"\n\tcd "$(ROOT)" && ./build.sh',
+        'check:\n\tpython3 "$$ROOT/scripts/check-baseline.py"\n\tcd "$$ROOT" && ./build.sh',
     ]:
         require_contains(makefile, token, "Makefile")
-    if "python3 scripts/check-baseline.py" in makefile or "\n\t./build.sh" in makefile:
+    if (
+        "python3 scripts/check-baseline.py" in makefile
+        or "\n\t./build.sh" in makefile
+        or 'python3 "$(ROOT)/scripts/check-baseline.py"' in makefile
+        or 'cd "$(ROOT)" && ./build.sh' in makefile
+    ):
         fail("Makefile contains caller-relative verification commands")
 
     workflow = read_text(".github/workflows/check.yml")
@@ -434,6 +463,8 @@ def check_docs() -> None:
     require_contains(readme, "available iPhone simulator", "README.md")
     require_contains(readme, "Face ID usage description", "README.md")
     require_contains(readme, "local and on-device", "README.md")
+    if "unavailable touch id" in readme.lower():
+        fail("README.md must describe unavailable biometrics without stale Touch ID-specific wording")
 
     vision = flattened(read_text("VISION.md"))
     for token in ["scripts/check-baseline.py", "make lint", "make test", "make build", "GitHub Actions", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "terminal context invalidation"]:
@@ -457,6 +488,8 @@ def check_docs() -> None:
     require_contains(security, "executes the unsigned focused XCTest target", "SECURITY.md")
     require_contains(security, "Face ID usage description", "SECURITY.md")
     require_contains(security, "local and on-device", "SECURITY.md")
+    if "simulator compilation" in security.lower():
+        fail("SECURITY.md must describe XCTest execution, not stale simulator compilation")
 
     changes = flattened(read_text("CHANGES.md"))
     for token in ["GitHub Actions", "console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "build.sh", "make lint", "make test", "make build", "make check", "local-only privacy", "terminal context invalidation"]:

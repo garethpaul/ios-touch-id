@@ -30,6 +30,11 @@ final class touchidTests: XCTestCase {
         XCTAssertEqual(controller.authenticationResultMessage(success: true, error: error), "authentication failed")
     }
 
+    func testAuthenticationResultMessageRejectsMissingErrorFailure() {
+        let controller = ViewController()
+        XCTAssertEqual(controller.authenticationResultMessage(success: false, error: nil), "unable to authenticate user")
+    }
+
     func testAuthenticationFailureReasonHandlesUnavailableBiometrics() {
         let controller = ViewController()
         let error = NSError(domain: LAError.errorDomain, code: LAError.Code.biometryNotAvailable.rawValue)
@@ -57,6 +62,30 @@ final class touchidTests: XCTestCase {
         let controller = ViewController()
         let error = NSError(domain: LAError.errorDomain, code: LAError.Code.userFallback.rawValue)
         XCTAssertEqual(controller.authenticationFailureReason(error), "user chose fallback authentication", "Fallback choices should not imply a password flow exists")
+    }
+
+    func testAuthenticationFailureReasonHandlesUserCancel() {
+        let controller = ViewController()
+        let error = NSError(domain: LAError.errorDomain, code: LAError.Code.userCancel.rawValue)
+        XCTAssertEqual(controller.authenticationFailureReason(error), "user canceled authentication")
+    }
+
+    func testAuthenticationFailureReasonHandlesSystemCancel() {
+        let controller = ViewController()
+        let error = NSError(domain: LAError.errorDomain, code: LAError.Code.systemCancel.rawValue)
+        XCTAssertEqual(controller.authenticationFailureReason(error), "system canceled authentication")
+    }
+
+    func testAuthenticationFailureReasonHandlesPasscodeNotSet() {
+        let controller = ViewController()
+        let error = NSError(domain: LAError.errorDomain, code: LAError.Code.passcodeNotSet.rawValue)
+        XCTAssertEqual(controller.authenticationFailureReason(error), "passcode not set")
+    }
+
+    func testAuthenticationFailureReasonHandlesUnknownLocalAuthenticationError() {
+        let controller = ViewController()
+        let error = NSError(domain: LAError.errorDomain, code: Int.max)
+        XCTAssertEqual(controller.authenticationFailureReason(error), "unable to authenticate user")
     }
 
     func testAuthenticationFailureReasonHandlesBiometryLockout() {

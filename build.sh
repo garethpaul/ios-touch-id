@@ -10,14 +10,29 @@ fi
 simulator_id=$(
     xcrun simctl list devices available --json | python3 -c '
 import json
+import re
 import sys
 
 devices = json.load(sys.stdin).get("devices", {})
-for runtime in sorted(devices, reverse=True):
-    for device in devices[runtime]:
+candidates = []
+for runtime, runtime_devices in devices.items():
+    runtime_match = re.search(r"iOS-(\d+)(?:-(\d+))?", runtime)
+    if runtime_match is None:
+        continue
+    version = (
+        int(runtime_match.group(1)),
+        int(runtime_match.group(2) or 0),
+    )
+    if version < (12, 0):
+        continue
+    for device in runtime_devices:
         if device.get("isAvailable") and device.get("name", "").startswith("iPhone"):
-            print(device["udid"])
-            raise SystemExit(0)
+            booted = 1 if device.get("state") == "Booted" else 0
+            candidates.append((version, booted, device["udid"]))
+if candidates:
+    candidates.sort()
+    print(candidates[-1][2])
+    raise SystemExit(0)
 raise SystemExit("No available iPhone simulator was found.")
 '
 )

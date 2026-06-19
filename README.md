@@ -61,7 +61,7 @@ authentication button to start the biometric request. Completion handling fails
 closed unless LocalAuthentication reports success with no error. Biometric success
 should be treated as a local device signal only, not as server identity proof.
 Unavailable biometric hardware and unenrolled biometric states are handled
-locally, with failure reason tests covering unavailable Touch ID and missing
+locally, with failure reason tests covering unavailable biometrics and missing
 errors. The error domain guard keeps unrelated errors on the generic local
 failure path. The LocalAuthentication fallback title is hidden because this
 sample does not implement a password fallback flow. The in-progress title and
