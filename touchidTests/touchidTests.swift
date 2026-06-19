@@ -30,10 +30,21 @@ final class touchidTests: XCTestCase {
         XCTAssertEqual(controller.authenticationResultMessage(success: true, error: error), "authentication failed")
     }
 
-    func testAuthenticationFailureReasonHandlesUnavailableTouchID() {
+    func testAuthenticationResultMessageRejectsMissingErrorFailure() {
+        let controller = ViewController()
+        XCTAssertEqual(controller.authenticationResultMessage(success: false, error: nil), "unable to authenticate user")
+    }
+
+    func testAuthenticationFailureReasonHandlesUnavailableBiometrics() {
         let controller = ViewController()
         let error = NSError(domain: LAError.errorDomain, code: LAError.Code.biometryNotAvailable.rawValue)
-        XCTAssertEqual(controller.authenticationFailureReason(error), "touch id unavailable", "Unavailable Touch ID should stay local and specific")
+        XCTAssertEqual(controller.authenticationFailureReason(error), "biometric authentication unavailable", "Unavailable biometrics should stay local and sensor-neutral")
+    }
+
+    func testAuthenticationFailureReasonHandlesUnenrolledBiometrics() {
+        let controller = ViewController()
+        let error = NSError(domain: LAError.errorDomain, code: LAError.Code.biometryNotEnrolled.rawValue)
+        XCTAssertEqual(controller.authenticationFailureReason(error), "biometric authentication not enrolled", "Enrollment guidance should not name an unavailable sensor type")
     }
 
     func testAuthenticationFailureReasonHandlesMissingError() {
@@ -53,10 +64,34 @@ final class touchidTests: XCTestCase {
         XCTAssertEqual(controller.authenticationFailureReason(error), "user chose fallback authentication", "Fallback choices should not imply a password flow exists")
     }
 
+    func testAuthenticationFailureReasonHandlesUserCancel() {
+        let controller = ViewController()
+        let error = NSError(domain: LAError.errorDomain, code: LAError.Code.userCancel.rawValue)
+        XCTAssertEqual(controller.authenticationFailureReason(error), "user canceled authentication")
+    }
+
+    func testAuthenticationFailureReasonHandlesSystemCancel() {
+        let controller = ViewController()
+        let error = NSError(domain: LAError.errorDomain, code: LAError.Code.systemCancel.rawValue)
+        XCTAssertEqual(controller.authenticationFailureReason(error), "system canceled authentication")
+    }
+
+    func testAuthenticationFailureReasonHandlesPasscodeNotSet() {
+        let controller = ViewController()
+        let error = NSError(domain: LAError.errorDomain, code: LAError.Code.passcodeNotSet.rawValue)
+        XCTAssertEqual(controller.authenticationFailureReason(error), "passcode not set")
+    }
+
+    func testAuthenticationFailureReasonHandlesUnknownLocalAuthenticationError() {
+        let controller = ViewController()
+        let error = NSError(domain: LAError.errorDomain, code: Int.max)
+        XCTAssertEqual(controller.authenticationFailureReason(error), "unable to authenticate user")
+    }
+
     func testAuthenticationFailureReasonHandlesBiometryLockout() {
         let controller = ViewController()
         let error = NSError(domain: LAError.errorDomain, code: LAError.Code.biometryLockout.rawValue)
-        XCTAssertEqual(controller.authenticationFailureReason(error), "touch id locked")
+        XCTAssertEqual(controller.authenticationFailureReason(error), "biometric authentication locked")
     }
 
 }

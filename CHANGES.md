@@ -1,5 +1,27 @@
 # Changes
 
+## 2026-06-18
+
+- Replaced Touch ID-specific unavailable, unenrolled, and lockout messages with
+  biometric-neutral failure copy covered by focused XCTest.
+
+## 2026-06-17
+
+- Added the required Face ID usage description with a local and on-device
+  authentication purpose.
+
+## 2026-06-16
+
+- Executed the focused LocalAuthentication message-mapping XCTest suite on an
+  available hosted iPhone simulator instead of compiling the test target only.
+
+## 2026-06-13
+
+- Made all Make verification aliases location-independent when invoked through
+  an absolute Makefile path.
+- Added terminal context invalidation before accepted authentication attempts
+  clear their retained `LAContext`.
+
 ## 2026-06-12
 
 - Normalized LocalAuthentication callback results through a tested fail-closed

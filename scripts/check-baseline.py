@@ -14,6 +14,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+FACE_ID_USAGE_DESCRIPTION = "Use Face ID to authenticate locally on this device."
 
 
 REQUIRED_FILES = [
@@ -39,9 +40,15 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-10-hosted-project-validation.md",
     "docs/plans/2026-06-10-swift-5-authentication-build.md",
     "docs/plans/2026-06-12-fail-closed-authentication-result.md",
+    "docs/plans/2026-06-13-completed-auth-context-invalidation.md",
+    "docs/plans/2026-06-13-location-independent-make.md",
+    "docs/plans/2026-06-16-hosted-xctest-execution.md",
+    "docs/plans/2026-06-17-019-add-face-id-usage-description-plan.md",
+    "docs/plans/2026-06-18-biometric-neutral-failure-copy.md",
     "docs/readme-overview.svg",
     "touchid.xcodeproj/project.pbxproj",
     "touchid.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
+    "touchid.xcodeproj/xcshareddata/xcschemes/touchid.xcscheme",
     "touchid/AppDelegate.swift",
     "touchid/Base.lproj/LaunchScreen.xib",
     "touchid/Base.lproj/Main.storyboard",
@@ -93,6 +100,14 @@ def require_contains(text: str, needle: str, label: str) -> None:
 
 def flattened(text: str) -> str:
     return " ".join(text.split())
+
+
+def markdown_section(text: str, heading: str) -> str:
+    match = re.search(
+        rf"(?ms)^## {re.escape(heading)}\s*$\n(.*?)(?=^## |\Z)",
+        text,
+    )
+    return match.group(1).strip() if match else ""
 
 
 def parse_xml(path: str) -> ET.Element:
@@ -151,20 +166,48 @@ def check_project_metadata() -> None:
     project = read_text("touchid.xcodeproj/project.pbxproj")
     tests = read_text("touchidTests/touchidTests.swift")
     build_script = read_text("build.sh")
+    scheme = read_text("touchid.xcodeproj/xcshareddata/xcschemes/touchid.xcscheme")
     shell_result = subprocess.run(["sh", "-n", "build.sh"], cwd=str(ROOT), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if shell_result.returncode != 0:
         fail(f"build.sh must pass POSIX shell syntax checks: {shell_result.stderr.strip()}")
     for token in [
         'xcodebuild -project "touchid.xcodeproj"',
-        '-target "touchidTests"',
-        "-sdk iphonesimulator",
+        '-scheme "touchid"',
+        '-destination "platform=iOS Simulator,id=$simulator_id"',
+        '-derivedDataPath "$build_root/DerivedData"',
         'configuration "Debug"',
         "CODE_SIGNING_ALLOWED=NO",
+        "CODE_SIGNING_REQUIRED=NO",
+        "xcrun simctl list devices available --json",
+        "runtime_match = re.search",
+        r"iOS-(\d+)(?:-(\d+))?",
+        'startswith("iPhone")',
+        'device.get("state") == "Booted"',
+        'build_root=$(mktemp -d "${TMPDIR:-/tmp}/ios-touch-id-tests.XXXXXX")',
+        "trap cleanup_build_root 0 1 2 15",
+        "test",
         "xcodebuild unavailable",
     ]:
         require_contains(build_script, token, "build.sh")
     if "function ci_build" in build_script:
         fail("build.sh must use POSIX function syntax")
+    if "-target \"touchidTests\"" in build_script or build_script.rstrip().endswith("build"):
+        fail("build.sh must execute XCTest instead of compiling the test target only")
+    if "sorted(devices, reverse=True)" in build_script:
+        fail("build.sh must select simulator runtimes by parsed iOS version, not lexicographic runtime names")
+
+    scheme_root = parse_xml("touchid.xcodeproj/xcshareddata/xcschemes/touchid.xcscheme")
+    if scheme_root.tag != "Scheme":
+        fail("touchid.xcscheme must describe an Xcode scheme")
+    for token in [
+        'BlueprintIdentifier = "7F2332C81B119134000AF54B"',
+        'BlueprintIdentifier = "7F2332DD1B119134000AF54B"',
+        'BuildableName = "touchidTests.xctest"',
+        '<TestAction',
+        '<TestableReference',
+        'skipped = "NO"',
+    ]:
+        require_contains(scheme, token, "touchid.xcscheme")
 
     for token in [
         "ViewController.swift in Sources",
@@ -181,17 +224,27 @@ def check_project_metadata() -> None:
     for token in [
         "import LocalAuthentication",
         "@testable import touchid",
-        "testAuthenticationFailureReasonHandlesUnavailableTouchID",
+        "testAuthenticationFailureReasonHandlesUnavailableBiometrics",
+        "testAuthenticationFailureReasonHandlesUnenrolledBiometrics",
         "testAuthenticationFailureReasonHandlesMissingError",
         "testAuthenticationFailureReasonRejectsOtherErrorDomains",
         "testAuthenticationFailureReasonHandlesUserFallback",
         "testAuthenticationFailureReasonHandlesBiometryLockout",
+        "testAuthenticationFailureReasonHandlesUserCancel",
+        "testAuthenticationFailureReasonHandlesSystemCancel",
+        "testAuthenticationFailureReasonHandlesPasscodeNotSet",
+        "testAuthenticationFailureReasonHandlesUnknownLocalAuthenticationError",
         "testAuthenticationResultMessageHandlesSuccessfulResult",
         "testAuthenticationResultMessageHandlesFailedResult",
         "testAuthenticationResultMessageRejectsContradictorySuccess",
+        "testAuthenticationResultMessageRejectsMissingErrorFailure",
         'authenticationResultMessage(success: true, error: error), "authentication failed"',
+        'authenticationResultMessage(success: false, error: nil), "unable to authenticate user"',
         "LAError.errorDomain",
         "LAError.Code.biometryNotAvailable.rawValue",
+        "LAError.Code.userCancel.rawValue",
+        "LAError.Code.systemCancel.rawValue",
+        "LAError.Code.passcodeNotSet.rawValue",
         "XCTAssertEqual",
     ]:
         require_contains(tests, token, "touchidTests.swift")
@@ -211,6 +264,9 @@ def check_app_metadata_and_assets() -> None:
         fail("touchid Info.plist must point at Main.storyboard")
     if info.get("UILaunchStoryboardName") != "LaunchScreen":
         fail("touchid Info.plist must point at LaunchScreen")
+    face_id_description = info.get("NSFaceIDUsageDescription")
+    if not isinstance(face_id_description, str) or face_id_description.strip() != FACE_ID_USAGE_DESCRIPTION:
+        fail("touchid Info.plist must explain that Face ID authenticates locally on this device")
 
     tests = parse_plist("touchidTests/Info.plist")
     if tests.get("CFBundlePackageType") != "BNDL":
@@ -289,8 +345,34 @@ def check_local_authentication_flow() -> None:
         "case .biometryNotAvailable:",
         "case .biometryNotEnrolled:",
         "case .biometryLockout:",
+        'return "biometric authentication unavailable"',
+        'return "biometric authentication not enrolled"',
+        'return "biometric authentication locked"',
     ]:
         require_contains(source, token, "ViewController.swift")
+
+    tests = read_text("touchidTests/touchidTests.swift")
+    for token in [
+        "testAuthenticationFailureReasonHandlesUnavailableBiometrics",
+        "testAuthenticationFailureReasonHandlesUnenrolledBiometrics",
+        "testAuthenticationFailureReasonHandlesBiometryLockout",
+        "testAuthenticationFailureReasonHandlesUserCancel",
+        "testAuthenticationFailureReasonHandlesSystemCancel",
+        "testAuthenticationFailureReasonHandlesPasscodeNotSet",
+        "testAuthenticationFailureReasonHandlesUnknownLocalAuthenticationError",
+        "testAuthenticationResultMessageRejectsMissingErrorFailure",
+        '"biometric authentication unavailable"',
+        '"biometric authentication not enrolled"',
+        '"biometric authentication locked"',
+        '"user canceled authentication"',
+        '"system canceled authentication"',
+        '"passcode not set"',
+        '"unable to authenticate user"',
+    ]:
+        require_contains(tests, token, "touchidTests.swift")
+    for stale_copy in ["touch id unavailable", "touch id not enrolled", "touch id locked"]:
+        if stale_copy in source.lower() or stale_copy in tests.lower():
+            fail(f"LocalAuthentication source and tests must not retain stale sensor-specific copy: {stale_copy}")
 
     if "error!.code" in source:
         fail("authentication failure handling must not force-unwrap the preflight error")
@@ -303,6 +385,21 @@ def check_local_authentication_flow() -> None:
     view_did_disappear = swift_function_body(source, "override func viewDidDisappear")
     for token in ["authenticationAttempt = nil", "authenticationContext?.invalidate()", "authenticationContext = nil"]:
         require_contains(view_did_disappear, token, "viewDidDisappear")
+    finish_authentication = swift_function_body(source, "private func finishAuthentication")
+    finish_tokens = [
+        "guard authenticationAttempt == attempt",
+        "authenticationContext?.invalidate()",
+        "authenticationAttempt = nil",
+        "authenticationContext = nil",
+        "authenticationInProgress = false",
+        "authenticateButton.isEnabled = true",
+        "describeReadyAuthenticationButton()",
+        "authenticationMessage = message",
+        "announceAuthenticationStatus(message)",
+    ]
+    finish_positions = [finish_authentication.find(token) for token in finish_tokens]
+    if any(position == -1 for position in finish_positions) or finish_positions != sorted(finish_positions):
+        fail("finishAuthentication must validate the attempt, invalidate its context, clear state, restore UI, and announce in order")
     for token in [
         "guard !authenticationInProgress",
         "authenticationInProgress = true",
@@ -325,14 +422,28 @@ def check_local_authentication_flow() -> None:
 
 def check_docs() -> None:
     makefile = read_text("Makefile")
-    for token in [".PHONY: build check lint test", "lint test build: check", "check:\n\tpython3 scripts/check-baseline.py\n\t./build.sh"]:
+    for token in [
+        ".PHONY: build check lint test",
+        "ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))",
+        "export ROOT",
+        "lint test build: check",
+        'check:\n\tpython3 "$$ROOT/scripts/check-baseline.py"\n\tcd "$$ROOT" && ./build.sh',
+    ]:
         require_contains(makefile, token, "Makefile")
+    if (
+        "python3 scripts/check-baseline.py" in makefile
+        or "\n\t./build.sh" in makefile
+        or 'python3 "$(ROOT)/scripts/check-baseline.py"' in makefile
+        or 'cd "$(ROOT)" && ./build.sh' in makefile
+    ):
+        fail("Makefile contains caller-relative verification commands")
 
     workflow = read_text(".github/workflows/check.yml")
     for token in [
         "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405",
         'python-version: "3.12"',
         "persist-credentials: false",
+        "Validate baseline and execute XCTest",
         "make check",
     ]:
         require_contains(workflow, token, "GitHub Actions workflow")
@@ -342,33 +453,46 @@ def check_docs() -> None:
         require_contains(gitignore, token, ".gitignore")
 
     readme = flattened(read_text("README.md"))
-    for token in ["make lint", "make test", "make build", "make check", "GitHub Actions", "build.sh", "scripts/check-baseline.py", "LocalAuthentication", "local biometric", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
+    for token in ["make lint", "make test", "make build", "make check", "GitHub Actions", "build.sh", "scripts/check-baseline.py", "LocalAuthentication", "local biometric", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "terminal context invalidation"]:
         require_contains(readme, token, "README.md")
     require_contains(readme, "error domain guard", "README.md")
     require_contains(readme, "in-progress title", "README.md")
     require_contains(readme, "accessibility announcements", "README.md")
     require_contains(readme, "macos-15", "README.md")
-    require_contains(readme, "compiles the Swift 5 app and XCTest target", "README.md")
+    require_contains(readme, "executes all focused Swift 5 XCTest cases", "README.md")
+    require_contains(readme, "available iPhone simulator", "README.md")
+    require_contains(readme, "Face ID usage description", "README.md")
+    require_contains(readme, "local and on-device", "README.md")
+    if "unavailable touch id" in readme.lower():
+        fail("README.md must describe unavailable biometrics without stale Touch ID-specific wording")
 
     vision = flattened(read_text("VISION.md"))
-    for token in ["scripts/check-baseline.py", "make lint", "make test", "make build", "GitHub Actions", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
+    for token in ["scripts/check-baseline.py", "make lint", "make test", "make build", "GitHub Actions", "build script", "local biometric", "server identity", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "terminal context invalidation"]:
         require_contains(vision, token, "VISION.md")
     require_contains(vision, "error domain guard", "VISION.md")
     require_contains(vision, "in-progress title", "VISION.md")
     require_contains(vision, "accessibility announcements", "VISION.md")
     require_contains(vision, "hosted project validation", "VISION.md")
+    require_contains(vision, "execute the Swift 5 XCTest target", "VISION.md")
+    require_contains(vision, "Face ID usage description", "VISION.md")
+    require_contains(vision, "local and on-device", "VISION.md")
 
     security = flattened(read_text("SECURITY.md"))
-    for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "GitHub Actions", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility"]:
+    for token in ["LocalAuthentication", "local biometric", "server identity", "make check", "GitHub Actions", "authentication-state logging", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "terminal context invalidation"]:
         require_contains(security, token, "SECURITY.md")
     require_contains(security, "error domain guard", "SECURITY.md")
     require_contains(security, "in-progress title", "SECURITY.md")
     require_contains(security, "accessibility announcements", "SECURITY.md")
     require_contains(security, "read-only", "SECURITY.md")
     require_contains(security, "stale completion callbacks", "SECURITY.md")
+    require_contains(security, "executes the unsigned focused XCTest target", "SECURITY.md")
+    require_contains(security, "Face ID usage description", "SECURITY.md")
+    require_contains(security, "local and on-device", "SECURITY.md")
+    if "simulator compilation" in security.lower():
+        fail("SECURITY.md must describe XCTest execution, not stale simulator compilation")
 
     changes = flattened(read_text("CHANGES.md"))
-    for token in ["GitHub Actions", "console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "build.sh", "make lint", "make test", "make build", "make check", "local-only privacy"]:
+    for token in ["GitHub Actions", "console logging", "callback error", "in-memory state", "explicit", "unavailable biometric", "failure reason tests", "fallback title", "accessibility", "build.sh", "make lint", "make test", "make build", "make check", "local-only privacy", "terminal context invalidation"]:
         require_contains(changes, token, "CHANGES.md")
     require_contains(changes, "error domain guard", "CHANGES.md")
     require_contains(changes, "in-progress title", "CHANGES.md")
@@ -376,6 +500,64 @@ def check_docs() -> None:
     require_contains(changes, "hosted project validation", "CHANGES.md")
     require_contains(changes, "Swift 5", "CHANGES.md")
     require_contains(changes, "stale completion callbacks", "CHANGES.md")
+    require_contains(changes, "instead of compiling the test target only", "CHANGES.md")
+    require_contains(changes, "Face ID usage description", "CHANGES.md")
+    require_contains(changes, "local and on-device", "CHANGES.md")
+
+    agent_guidance = flattened(read_text("AGENTS.md"))
+    for document_name, document in [
+        ("README.md", readme),
+        ("VISION.md", vision),
+        ("SECURITY.md", security),
+        ("CHANGES.md", changes),
+        ("AGENTS.md", agent_guidance),
+    ]:
+        require_contains(document, "biometric-neutral failure copy", document_name)
+
+    neutral_copy_plan = read_text("docs/plans/2026-06-18-biometric-neutral-failure-copy.md")
+    neutral_copy_statuses = re.findall(r"(?mi)^status:\s*(.+?)\s*$", neutral_copy_plan)
+    neutral_copy_verification = markdown_section(neutral_copy_plan, "Verification Completed")
+    neutral_copy_required = [
+        "All four Make gates",
+        "absolute Makefile",
+        "python3 -m py_compile scripts/check-baseline.py",
+        "sh -n build.sh",
+        "Seven isolated hostile mutations",
+        "git diff --check",
+        "xcodebuild was unavailable",
+    ]
+    if not (
+        neutral_copy_statuses == ["completed"]
+        and all(token in neutral_copy_verification for token in neutral_copy_required)
+        and re.search(r"(?i)\b(?:pending|todo|tbd|not run)\b", neutral_copy_verification) is None
+    ):
+        fail("biometric-neutral failure-copy plan must record completed verification")
+
+    face_id_plan = read_text("docs/plans/2026-06-17-019-add-face-id-usage-description-plan.md")
+    for token in [
+        "title: Face ID Usage Description",
+        "type: fix",
+        "date: 2026-06-17",
+        "R1.",
+        "R6.",
+        "NSFaceIDUsageDescription",
+    ]:
+        require_contains(face_id_plan, token, "Face ID usage description plan")
+    if re.search(r"(?mi)^status:\s*", face_id_plan):
+        fail("Face ID usage description plan must use modern metadata without a legacy status field")
+
+    hosted_xctest_plan = flattened(read_text("docs/plans/2026-06-16-hosted-xctest-execution.md"))
+    for token in [
+        "status: completed",
+        "shared scheme",
+        "available iPhone simulator",
+        "xcodebuild test",
+        "signing disabled",
+        "isolated DerivedData",
+        "hosts without Xcode",
+        "hosted push and pull-request XCTest execution before closure",
+    ]:
+        require_contains(hosted_xctest_plan, token, "hosted XCTest execution plan")
 
     make_gates_plan = flattened(read_text("docs/plans/2026-06-09-make-gate-aliases.md"))
     require_contains(make_gates_plan, "status: completed", "make gate aliases plan")
@@ -397,9 +579,59 @@ def check_docs() -> None:
     require_contains(in_progress_title_plan, "status: completed", "in-progress title plan")
     accessibility_announcements_plan = flattened(read_text("docs/plans/2026-06-10-local-auth-accessibility-announcements.md"))
     require_contains(accessibility_announcements_plan, "status: completed", "accessibility announcements plan")
-    fail_closed_result_plan = flattened(read_text("docs/plans/2026-06-12-fail-closed-authentication-result.md")).lower()
-    require_contains(fail_closed_result_plan, "status: completed", "fail-closed authentication result plan")
-    require_contains(fail_closed_result_plan, "mutation", "fail-closed authentication result plan")
+    fail_closed_result_plan = read_text("docs/plans/2026-06-12-fail-closed-authentication-result.md")
+    fail_closed_status = re.findall(r"(?mi)^status:\s*(.+?)\s*$", fail_closed_result_plan)
+    fail_closed_work = markdown_section(fail_closed_result_plan, "Work Completed")
+    fail_closed_verification = markdown_section(
+        fail_closed_result_plan, "Verification Completed"
+    )
+    if fail_closed_status != ["completed"] or not fail_closed_work:
+        fail("fail-closed authentication result plan must record one completed status and completed work")
+    if not fail_closed_verification or re.search(
+        r"(?i)\b(?:pending|todo|tbd|not run)\b", fail_closed_verification
+    ):
+        fail("fail-closed authentication result plan must record finished verification without pending markers")
+    for evidence in [
+        "make check",
+        "make lint",
+        "make test",
+        "make build",
+        "python3 -m py_compile scripts/check-baseline.py",
+        "sh -n build.sh",
+        "git diff --check",
+        "27395341720",
+        "27395390267",
+        "27402323777",
+        "eaaa0362c6cc9e2f0198486adefac8afa3ddf453",
+        "3f695c1618286e1a9e3bba7c3cf28c7a10a74a67",
+        "guard success, error == nil else",
+        "testAuthenticationResultMessageRejectsContradictorySuccess",
+    ]:
+        require_contains(fail_closed_verification, evidence, "fail-closed authentication result plan")
+    completed_context_plan = read_text("docs/plans/2026-06-13-completed-auth-context-invalidation.md")
+    require_contains(completed_context_plan, "status: completed", "completed authentication context plan")
+    require_contains(completed_context_plan, "All four Make gates", "completed authentication context plan")
+    require_contains(completed_context_plan.lower(), "hostile mutations", "completed authentication context plan")
+    location_make_plan = read_text("docs/plans/2026-06-13-location-independent-make.md")
+    location_make_statuses = re.findall(r"^status: .+$", location_make_plan, flags=re.MULTILINE)
+    location_make_verification = markdown_section(location_make_plan, "Verification Completed")
+    if not (
+        location_make_statuses == ["status: completed"]
+        and "All four Make gates passed from the checkout" in location_make_verification
+        and "All four Make gates passed from `/tmp` through the absolute Makefile path" in location_make_verification
+        and "python3 -m py_compile scripts/check-baseline.py" in location_make_verification
+        and "sh -n build.sh" in location_make_verification
+        and "project metadata parsing" in location_make_verification
+        and "git diff --check" in location_make_verification
+        and "`xcodebuild` was unavailable" in location_make_verification
+        and "Six isolated hostile mutations were rejected" in location_make_verification
+        and re.search(r"\b(?:pending|todo|tbd|not run)\b", location_make_verification, re.IGNORECASE) is None
+    ):
+        fail("location-independent Make plan must record completed status and actual local verification")
+    readme = read_text("README.md").lower()
+    changes = read_text("CHANGES.md").lower()
+    require_contains(readme, "absolute makefile path", "README")
+    require_contains(changes, "location-independent", "CHANGES")
     ci_plan = flattened(read_text("docs/plans/2026-06-10-ci-baseline.md"))
     require_contains(ci_plan, "status: completed", "CI baseline plan")
     require_contains(ci_plan, "GitHub Actions", "CI baseline plan")

@@ -53,22 +53,28 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Running or Using the Project
 
 - Open `touchid.xcodeproj` in Xcode, choose the app or sample scheme, and run it on the matching simulator/device.
-- Run `./build.sh` when the required platform toolchain is installed. It builds
-  the app and XCTest target for the simulator without code signing.
+- Run `./build.sh` when the required platform toolchain is installed. It runs
+  the focused XCTest target on an available simulator without code signing.
 
 This is a local biometric sample using `LocalAuthentication`. Tap the local
 authentication button to start the biometric request. Completion handling fails
 closed unless LocalAuthentication reports success with no error. Biometric success
 should be treated as a local device signal only, not as server identity proof.
 Unavailable biometric hardware and unenrolled biometric states are handled
-locally, with failure reason tests covering unavailable Touch ID and missing
+locally, with failure reason tests covering unavailable biometrics and missing
 errors. The error domain guard keeps unrelated errors on the generic local
 failure path. The LocalAuthentication fallback title is hidden because this
 sample does not implement a password fallback flow. The in-progress title and
 accessibility text describe the local biometric action while authentication is
 running without implying remote credential transfer. Accessibility announcements
-report local in-progress, success, and failure states without moving focus. The sample does not define
+report local in-progress, success, and failure states without moving focus.
+Terminal context invalidation runs for each accepted authentication completion
+before retained LocalAuthentication state is cleared. The sample does not define
 accounts, tokens, networking, uploads, or analytics.
+The app plist includes a Face ID usage description that keeps the permission
+purpose local and on-device instead of implying account or server authentication.
+The biometric-neutral failure copy keeps unavailable, unenrolled, and lockout
+status accurate across Touch ID and Face ID hardware.
 
 ## Testing and Verification
 
@@ -80,17 +86,16 @@ accounts, tokens, networking, uploads, or analytics.
   normalization, the error domain guard, the hidden fallback title, the
   in-progress title, local authentication
   accessibility text, accessibility announcements, and static privacy
-  guardrails.
+  guardrails, including the required Face ID purpose string.
 - The `lint`, `test`, and `build` targets use the same gate. On hosts without
-  Xcode they run the static baseline and skip compilation cleanly.
+  Xcode they run the static baseline and skip XCTest execution cleanly.
 - The pinned GitHub Actions check runs `make check` on `macos-15`. When Xcode is
-  available, the gate compiles the Swift 5 app and XCTest target. This hosted
-  validation does not invoke LocalAuthentication, access biometric state or
-  credentials, launch a simulator, or perform signing.
-- Full device verification uses Xcode's test action or
-  `xcodebuild test` with the appropriate target and destination on macOS.
+  available, the gate selects an available iPhone simulator and executes all
+  focused Swift 5 XCTest cases with signing disabled and isolated DerivedData.
+  These tests do not invoke LocalAuthentication or access biometric state or
+  credentials; physical-device biometric interaction remains manual.
 - GitHub Actions pins Python 3.12 on macOS before running the same `make check`
-  static baseline and unsigned simulator compilation for pushes and pull
+  static baseline and unsigned simulator XCTest execution for pushes and pull
   requests. Biometric interaction and device verification remain manual tasks.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -107,6 +112,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   `touchid/ViewController.swift` for LocalAuthentication error handling,
   fallback behavior, explicit user-triggered prompts, and local biometric
   privacy.
+- Keep the Face ID usage description aligned with local and on-device
+  authentication; it must not claim remote identity verification.
 - Review changes touching authentication or token handling; examples from the scan include touchid/ViewController.swift.
 - Review changes touching network requests, sockets, or service endpoints; examples from the scan include touchid/Info.plist, touchidTests/Info.plist.
 - Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include touchid/Info.plist, touchidTests/Info.plist.
@@ -117,6 +124,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Run `make lint`, `make test`, `make build`, and `make check` before pushing
   changes to Swift sources, project metadata, storyboards, app assets, tests, or
   security documentation.
+- The same gates may be invoked through an absolute Makefile path from another
+  directory; verification resolves both commands relative to the checkout.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `docs/plans/2026-06-09-make-gate-aliases.md` for the local gate alias guardrail.
@@ -125,6 +134,10 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `docs/plans/2026-06-09-local-auth-accessibility.md` for the local authentication accessibility guardrail.
 - See `docs/plans/2026-06-09-local-auth-in-progress-title.md` for the in-progress title guardrail.
 - See `docs/plans/2026-06-10-local-auth-accessibility-announcements.md` for the accessibility announcements guardrail.
+- See `docs/plans/2026-06-13-completed-auth-context-invalidation.md` for the
+  terminal context invalidation guardrail.
+- See `docs/plans/2026-06-17-019-add-face-id-usage-description-plan.md` for the
+  Face ID privacy-key contract.
 - See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions Python
   baseline and `docs/plans/2026-06-10-hosted-project-validation.md` for hosted
   Xcode validation.

@@ -29,5 +29,5 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Validate project and LocalAuthentication baseline
+      - name: Validate baseline and execute XCTest
         run: make check

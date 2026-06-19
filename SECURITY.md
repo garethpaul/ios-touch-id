@@ -39,6 +39,11 @@ Helpful reports include:
   credential transfer.
 - LocalAuthentication callback results must fail closed: announce success only
   when the success flag is true and no error is present.
+- The Face ID usage description must explain that authentication remains local
+  and on-device; it must not imply credential upload, account login, or server
+  identity proof.
+- The biometric-neutral failure copy must avoid claiming a specific sensor while
+  preserving LocalAuthentication error-domain checks.
 - Avoid authentication-state logging, token storage, analytics, upload, or
   network behavior in the sample. Run `make check` after changing the
   authentication flow, project metadata, storyboards, assets, tests, or docs.
@@ -47,16 +52,19 @@ Helpful reports include:
 - Active LocalAuthentication contexts are invalidated when the screen
   disappears, and stale completion callbacks must not restore or announce an
   earlier authentication attempt.
-- GitHub Actions runs the static checks and an unsigned simulator compilation
-  only. Do not add credential handling, deployment, remote authentication, or
-  live biometric service steps without a separate privacy and security review.
+- Each terminal context invalidation must occur after accepted-attempt validation
+  and before retained LocalAuthentication state is cleared.
+- GitHub Actions runs the static checks and an unsigned simulator XCTest target.
+  Do not add credential handling, deployment, remote authentication, or live
+  biometric service steps without a separate privacy and security review.
 - Review found authentication, token, or session-related code paths; changes in those areas should receive security-focused review before merge.
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.
 - No primary dependency manifest was detected in the repository root. If dependencies are added later, include a manifest and prefer reproducible installation instructions.
-- The pinned macOS workflow uses read-only repository permissions and compiles
-  the unsigned app and XCTest target without invoking LocalAuthentication,
-  accessing biometric state or credentials, or using signing material.
+- The pinned macOS workflow uses read-only repository permissions and executes
+  the unsigned focused XCTest target on an isolated simulator without invoking
+  LocalAuthentication, accessing biometric state or credentials, or using
+  signing material.
 
 ## Mobile Privacy Notes
 
