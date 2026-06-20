@@ -424,7 +424,7 @@ def check_docs() -> None:
     makefile = read_text("Makefile")
     for token in [
         ".PHONY: build check lint test",
-        "ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))",
+        "override ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))",
         "export ROOT",
         "lint test build: check",
         'check:\n\tpython3 "$$ROOT/scripts/check-baseline.py"\n\tcd "$$ROOT" && ./build.sh',
