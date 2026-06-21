@@ -17,6 +17,8 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 - `build.sh` - Xcode build helper that skips cleanly without Xcode
 - `SECURITY.md` - security reporting and disclosure guidance
 - `scripts/check-baseline.py` - static LocalAuthentication baseline checks
+- `scripts/test-bundle-identifiers.py` - target/configuration identifier
+  mutation checks
 - `touchid` - source or example code
 - `touchid.xcodeproj` - Xcode project file
 - `touchidTests` - source or example code
@@ -79,14 +81,16 @@ status accurate across Touch ID and Face ID hardware.
 ## Testing and Verification
 
 - `make lint`, `make test`, `make build`, and `make check` run
-  `scripts/check-baseline.py`, which verifies Xcode project
+  `scripts/check-baseline.py` plus four target bundle identifier mutations,
+  which verify Xcode project
   wiring, plist/storyboard/asset files, the LocalAuthentication flow, local
   biometric wording, explicit user-triggered authentication, unavailable
   biometric failure reasons, failure reason tests, fail-closed callback result
   normalization, the error domain guard, the hidden fallback title, the
   in-progress title, local authentication
   accessibility text, accessibility announcements, and static privacy
-  guardrails, including the required Face ID purpose string.
+  guardrails, including the required Face ID purpose string and target-local
+  app/test bundle identifiers.
 - The `lint`, `test`, and `build` targets use the same gate. On hosts without
   Xcode they run the static baseline and skip XCTest execution cleanly.
 - The pinned GitHub Actions check runs `make check` on `macos-15`. When Xcode is

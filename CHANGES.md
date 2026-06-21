@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-21
+
+- Aligned target-local app and XCTest bundle identifiers with their existing
+  Info.plist identifiers and added four configuration-specific mutation checks.
+
 ## 2026-06-18
 
 - Replaced Touch ID-specific unavailable, unenrolled, and lockout messages with
