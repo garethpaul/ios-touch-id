@@ -46,6 +46,7 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-17-019-add-face-id-usage-description-plan.md",
     "docs/plans/2026-06-18-biometric-neutral-failure-copy.md",
     "docs/readme-overview.svg",
+    "scripts/test-bundle-identifiers.py",
     "touchid.xcodeproj/project.pbxproj",
     "touchid.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
     "touchid.xcodeproj/xcshareddata/xcschemes/touchid.xcscheme",
@@ -157,6 +158,19 @@ def swift_function_body(text: str, signature: str) -> str:
     return ""
 
 
+def build_configuration_settings(project: str, configuration_id: str) -> str:
+    configuration_start = project.find(f"{configuration_id} /* ")
+    if configuration_start == -1:
+        return ""
+    settings_start = project.find("buildSettings = {", configuration_start)
+    if settings_start == -1:
+        return ""
+    settings_end = project.find("\n\t\t\t};", settings_start)
+    if settings_end == -1:
+        return ""
+    return project[settings_start:settings_end]
+
+
 def check_required_files() -> None:
     for path in REQUIRED_FILES:
         require_file(path)
@@ -221,6 +235,19 @@ def check_project_metadata() -> None:
         fail("Xcode project must use iOS 12 for both project configurations")
     if project.count("SWIFT_VERSION = 5.0;") != 6:
         fail("Xcode project must use Swift 5 for every project and target configuration")
+    expected_bundle_identifiers = {
+        "7F2332E91B119134000AF54B": "com.garethpaul.touchid",
+        "7F2332EA1B119134000AF54B": "com.garethpaul.touchid",
+        "7F2332EC1B119134000AF54B": "com.garethpaul.touchidTests",
+        "7F2332ED1B119134000AF54B": "com.garethpaul.touchidTests",
+    }
+    for configuration_id, bundle_identifier in expected_bundle_identifiers.items():
+        settings = build_configuration_settings(project, configuration_id)
+        require_contains(
+            settings,
+            f"PRODUCT_BUNDLE_IDENTIFIER = {bundle_identifier};",
+            f"Xcode target configuration {configuration_id}",
+        )
     for token in [
         "import LocalAuthentication",
         "@testable import touchid",
@@ -427,13 +454,15 @@ def check_docs() -> None:
         "override ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))",
         "export ROOT",
         "lint test build: check",
-        'check:\n\tpython3 "$$ROOT/scripts/check-baseline.py"\n\tcd "$$ROOT" && ./build.sh',
+        'check:\n\tpython3 "$$ROOT/scripts/check-baseline.py"\n\tpython3 "$$ROOT/scripts/test-bundle-identifiers.py"\n\tcd "$$ROOT" && ./build.sh',
     ]:
         require_contains(makefile, token, "Makefile")
     if (
         "python3 scripts/check-baseline.py" in makefile
+        or "python3 scripts/test-bundle-identifiers.py" in makefile
         or "\n\t./build.sh" in makefile
         or 'python3 "$(ROOT)/scripts/check-baseline.py"' in makefile
+        or 'python3 "$(ROOT)/scripts/test-bundle-identifiers.py"' in makefile
         or 'cd "$(ROOT)" && ./build.sh' in makefile
     ):
         fail("Makefile contains caller-relative verification commands")
