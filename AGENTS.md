@@ -47,6 +47,9 @@
 - Avoid authentication-state logging. Review all changes to `touchid/ViewController.swift` for fail-closed LocalAuthentication result handling, fallback behavior, explicit user-triggered prompts, and local biometric privacy.
 - Keep biometric-neutral failure copy aligned across Touch ID and Face ID
   without weakening error-domain or fail-closed result checks.
+- Keep known user, system, and app cancellation codes explicit and local while
+  preserving generic handling for unknown codes and non-LocalAuthentication
+  error domains.
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
 - Run `make lint`, `make test`, `make build`, and `make check` before pushing changes to Swift sources, project metadata, storyboards, app assets, tests, or security documentation.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.

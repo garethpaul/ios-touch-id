@@ -116,6 +116,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
   `touchid/ViewController.swift` for LocalAuthentication error handling,
   fallback behavior, explicit user-triggered prompts, and local biometric
   privacy.
+- Known LocalAuthentication cancellation codes keep local, specific failure
+  copy: user, system, and app cancellation remain distinct while unknown codes
+  and unrelated error domains fail closed to the generic message.
 - Keep the Face ID usage description aligned with local and on-device
   authentication; it must not claim remote identity verification.
 - Review changes touching authentication or token handling; examples from the scan include touchid/ViewController.swift.
@@ -142,6 +145,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   terminal context invalidation guardrail.
 - See `docs/plans/2026-06-17-019-add-face-id-usage-description-plan.md` for the
   Face ID privacy-key contract.
+- See `docs/plans/2026-06-25-app-cancel-failure-reason.md` for explicit
+  app-cancellation classification and regression coverage.
 - See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions Python
   baseline and `docs/plans/2026-06-10-hosted-project-validation.md` for hosted
   Xcode validation.

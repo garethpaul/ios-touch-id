@@ -45,6 +45,7 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-16-hosted-xctest-execution.md",
     "docs/plans/2026-06-17-019-add-face-id-usage-description-plan.md",
     "docs/plans/2026-06-18-biometric-neutral-failure-copy.md",
+    "docs/plans/2026-06-25-app-cancel-failure-reason.md",
     "docs/readme-overview.svg",
     "scripts/test-bundle-identifiers.py",
     "touchid.xcodeproj/project.pbxproj",
@@ -366,6 +367,8 @@ def check_local_authentication_flow() -> None:
         "case .authenticationFailed:",
         "case .userCancel:",
         "case .systemCancel:",
+        "case .appCancel:",
+        'return "app canceled authentication"',
         "case .passcodeNotSet:",
         "case .userFallback:",
         'return "user chose fallback authentication"',
@@ -385,6 +388,7 @@ def check_local_authentication_flow() -> None:
         "testAuthenticationFailureReasonHandlesBiometryLockout",
         "testAuthenticationFailureReasonHandlesUserCancel",
         "testAuthenticationFailureReasonHandlesSystemCancel",
+        "testAuthenticationFailureReasonHandlesAppCancel",
         "testAuthenticationFailureReasonHandlesPasscodeNotSet",
         "testAuthenticationFailureReasonHandlesUnknownLocalAuthenticationError",
         "testAuthenticationResultMessageRejectsMissingErrorFailure",
@@ -393,6 +397,7 @@ def check_local_authentication_flow() -> None:
         '"biometric authentication locked"',
         '"user canceled authentication"',
         '"system canceled authentication"',
+        '"app canceled authentication"',
         '"passcode not set"',
         '"unable to authenticate user"',
     ]:
@@ -561,6 +566,15 @@ def check_docs() -> None:
         and re.search(r"(?i)\b(?:pending|todo|tbd|not run)\b", neutral_copy_verification) is None
     ):
         fail("biometric-neutral failure-copy plan must record completed verification")
+
+    app_cancel_plan = flattened(read_text("docs/plans/2026-06-25-app-cancel-failure-reason.md"))
+    for token in [
+        "status: completed",
+        "LAError.Code.appCancel",
+        "testAuthenticationFailureReasonHandlesAppCancel",
+        "hostile mutation",
+    ]:
+        require_contains(app_cancel_plan, token, "app cancellation failure reason plan")
 
     face_id_plan = read_text("docs/plans/2026-06-17-019-add-face-id-usage-description-plan.md")
     for token in [

@@ -76,6 +76,12 @@ final class touchidTests: XCTestCase {
         XCTAssertEqual(controller.authenticationFailureReason(error), "system canceled authentication")
     }
 
+    func testAuthenticationFailureReasonHandlesAppCancel() {
+        let controller = ViewController()
+        let error = NSError(domain: LAError.errorDomain, code: LAError.Code.appCancel.rawValue)
+        XCTAssertEqual(controller.authenticationFailureReason(error), "app canceled authentication")
+    }
+
     func testAuthenticationFailureReasonHandlesPasscodeNotSet() {
         let controller = ViewController()
         let error = NSError(domain: LAError.errorDomain, code: LAError.Code.passcodeNotSet.rawValue)
