@@ -49,6 +49,8 @@ Priority:
 - Keep the Face ID usage description aligned with local and on-device
   authentication
 - Keep biometric-neutral failure copy accurate across supported sensor types
+- Keep user, system, and app cancellation reasons explicit without weakening
+  the generic fail-closed path for unknown or unrelated errors
 - Invalidate active authentication contexts off-screen and reject stale callbacks
 - Preserve terminal context invalidation for every accepted authentication
   completion path

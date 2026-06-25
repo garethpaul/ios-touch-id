@@ -1,5 +1,46 @@
 # Changes
 
+## 2026-06-25 05:19 - P2 - Classify app-canceled authentication
+
+### Summary
+Mapped LocalAuthentication's known `.appCancel` result to explicit local
+cancellation copy instead of treating it as an unknown authentication failure.
+
+### Work completed
+- Added the missing app-cancellation branch to failure classification.
+- Added focused XCTest and static contracts for the known error code.
+
+### Threads
+- Started: none — work completed directly in the current repository.
+- Continued: none.
+- Stopped: none.
+
+### Files changed
+- `touchid/ViewController.swift` — classified `.appCancel` explicitly.
+- `touchidTests/touchidTests.swift` — added the regression expectation.
+- `scripts/check-baseline.py` — required source, test, and plan evidence.
+- Documentation and plan files — recorded the fail-closed boundary.
+
+### Validation
+- `python3 scripts/check-baseline.py` — failed on the missing source branch
+  before implementation and passed afterward.
+- `/usr/bin/make check` — passed the static baseline, four bundle-identifier
+  mutations, and conditional hosted-test gate; Xcode was unavailable locally.
+- One isolated hostile mutation removing the `.appCancel` branch was rejected.
+- Python compilation, shell syntax, and `git diff --check` — passed.
+- Hosted Swift/XCTest and CodeQL checks — pending PR verification.
+
+### Bugs / findings
+- P2: Apple's known app-initiated cancellation code fell through to the same
+  message as unknown codes and unrelated error domains.
+
+### Blockers
+- `xcodebuild` is unavailable locally; hosted macOS CI remains authoritative for
+  Swift, UIKit, LocalAuthentication, and XCTest execution.
+
+### Next action
+- Open a PR and complete Codex plus hosted review before merge.
+
 ## 2026-06-21
 
 - Aligned target-local app and XCTest bundle identifiers with their existing

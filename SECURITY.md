@@ -44,6 +44,9 @@ Helpful reports include:
   identity proof.
 - The biometric-neutral failure copy must avoid claiming a specific sensor while
   preserving LocalAuthentication error-domain checks.
+- Known LocalAuthentication cancellation codes may use local, specific copy;
+  `.appCancel` must not fall through to an unknown error, while unrelated
+  domains and unrecognized codes remain on the generic fail-closed path.
 - Avoid authentication-state logging, token storage, analytics, upload, or
   network behavior in the sample. Run `make check` after changing the
   authentication flow, project metadata, storyboards, assets, tests, or docs.
