@@ -47,6 +47,7 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-18-biometric-neutral-failure-copy.md",
     "docs/plans/2026-06-25-app-cancel-failure-reason.md",
     "docs/plans/2026-06-26-invalid-context-failure-reason.md",
+    "docs/plans/2026-06-26-not-interactive-failure-reason.md",
     "docs/readme-overview.svg",
     "scripts/test-bundle-identifiers.py",
     "touchid.xcodeproj/project.pbxproj",
@@ -262,6 +263,7 @@ def check_project_metadata() -> None:
         "testAuthenticationFailureReasonHandlesUserCancel",
         "testAuthenticationFailureReasonHandlesSystemCancel",
         "testAuthenticationFailureReasonHandlesInvalidContext",
+        "testAuthenticationFailureReasonHandlesNotInteractive",
         "testAuthenticationFailureReasonHandlesPasscodeNotSet",
         "testAuthenticationFailureReasonHandlesUnknownLocalAuthenticationError",
         "testAuthenticationResultMessageHandlesSuccessfulResult",
@@ -275,6 +277,7 @@ def check_project_metadata() -> None:
         "LAError.Code.userCancel.rawValue",
         "LAError.Code.systemCancel.rawValue",
         "LAError.Code.invalidContext.rawValue",
+        "LAError.Code.notInteractive.rawValue",
         "LAError.Code.passcodeNotSet.rawValue",
         "XCTAssertEqual",
     ]:
@@ -374,6 +377,8 @@ def check_local_authentication_flow() -> None:
         'return "app canceled authentication"',
         "case .invalidContext:",
         'return "authentication context invalid"',
+        "case .notInteractive:",
+        'return "authentication interaction unavailable"',
         "case .passcodeNotSet:",
         "case .userFallback:",
         'return "user chose fallback authentication"',
@@ -394,6 +399,7 @@ def check_local_authentication_flow() -> None:
         "testAuthenticationFailureReasonHandlesUserCancel",
         "testAuthenticationFailureReasonHandlesSystemCancel",
         "testAuthenticationFailureReasonHandlesAppCancel",
+        "testAuthenticationFailureReasonHandlesNotInteractive",
         "testAuthenticationFailureReasonHandlesPasscodeNotSet",
         "testAuthenticationFailureReasonHandlesUnknownLocalAuthenticationError",
         "testAuthenticationResultMessageRejectsMissingErrorFailure",
@@ -403,6 +409,7 @@ def check_local_authentication_flow() -> None:
         '"user canceled authentication"',
         '"system canceled authentication"',
         '"app canceled authentication"',
+        '"authentication interaction unavailable"',
         '"passcode not set"',
         '"unable to authenticate user"',
     ]:
@@ -589,6 +596,15 @@ def check_docs() -> None:
         "hostile mutation",
     ]:
         require_contains(invalid_context_plan, token, "invalid context failure reason plan")
+
+    not_interactive_plan = flattened(read_text("docs/plans/2026-06-26-not-interactive-failure-reason.md"))
+    for token in [
+        "status: completed",
+        "LAError.Code.notInteractive",
+        "testAuthenticationFailureReasonHandlesNotInteractive",
+        "hostile mutation",
+    ]:
+        require_contains(not_interactive_plan, token, "noninteractive failure reason plan")
 
     face_id_plan = read_text("docs/plans/2026-06-17-019-add-face-id-usage-description-plan.md")
     for token in [
