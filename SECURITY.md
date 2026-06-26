@@ -47,6 +47,8 @@ Helpful reports include:
 - Known LocalAuthentication cancellation codes may use local, specific copy;
   `.appCancel` must not fall through to an unknown error, while unrelated
   domains and unrecognized codes remain on the generic fail-closed path.
+- `.invalidContext` should identify a previously invalidated local context
+  explicitly while stale attempt identifiers continue to suppress old callbacks.
 - Avoid authentication-state logging, token storage, analytics, upload, or
   network behavior in the sample. Run `make check` after changing the
   authentication flow, project metadata, storyboards, assets, tests, or docs.

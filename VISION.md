@@ -51,6 +51,8 @@ Priority:
 - Keep biometric-neutral failure copy accurate across supported sensor types
 - Keep user, system, and app cancellation reasons explicit without weakening
   the generic fail-closed path for unknown or unrelated errors
+- Keep invalidated LocalAuthentication contexts explicit while stale attempt
+  identifiers continue to reject superseded callbacks
 - Invalidate active authentication contexts off-screen and reject stale callbacks
 - Preserve terminal context invalidation for every accepted authentication
   completion path

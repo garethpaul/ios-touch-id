@@ -50,6 +50,8 @@
 - Keep known user, system, and app cancellation codes explicit and local while
   preserving generic handling for unknown codes and non-LocalAuthentication
   error domains.
+- Keep Apple's known invalidated-context result explicit without treating local
+  authentication as remote identity or weakening stale-attempt rejection.
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
 - Run `make lint`, `make test`, `make build`, and `make check` before pushing changes to Swift sources, project metadata, storyboards, app assets, tests, or security documentation.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.

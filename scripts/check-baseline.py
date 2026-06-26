@@ -46,6 +46,7 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-17-019-add-face-id-usage-description-plan.md",
     "docs/plans/2026-06-18-biometric-neutral-failure-copy.md",
     "docs/plans/2026-06-25-app-cancel-failure-reason.md",
+    "docs/plans/2026-06-26-invalid-context-failure-reason.md",
     "docs/readme-overview.svg",
     "scripts/test-bundle-identifiers.py",
     "touchid.xcodeproj/project.pbxproj",
@@ -260,6 +261,7 @@ def check_project_metadata() -> None:
         "testAuthenticationFailureReasonHandlesBiometryLockout",
         "testAuthenticationFailureReasonHandlesUserCancel",
         "testAuthenticationFailureReasonHandlesSystemCancel",
+        "testAuthenticationFailureReasonHandlesInvalidContext",
         "testAuthenticationFailureReasonHandlesPasscodeNotSet",
         "testAuthenticationFailureReasonHandlesUnknownLocalAuthenticationError",
         "testAuthenticationResultMessageHandlesSuccessfulResult",
@@ -272,6 +274,7 @@ def check_project_metadata() -> None:
         "LAError.Code.biometryNotAvailable.rawValue",
         "LAError.Code.userCancel.rawValue",
         "LAError.Code.systemCancel.rawValue",
+        "LAError.Code.invalidContext.rawValue",
         "LAError.Code.passcodeNotSet.rawValue",
         "XCTAssertEqual",
     ]:
@@ -369,6 +372,8 @@ def check_local_authentication_flow() -> None:
         "case .systemCancel:",
         "case .appCancel:",
         'return "app canceled authentication"',
+        "case .invalidContext:",
+        'return "authentication context invalid"',
         "case .passcodeNotSet:",
         "case .userFallback:",
         'return "user chose fallback authentication"',
@@ -575,6 +580,15 @@ def check_docs() -> None:
         "hostile mutation",
     ]:
         require_contains(app_cancel_plan, token, "app cancellation failure reason plan")
+
+    invalid_context_plan = flattened(read_text("docs/plans/2026-06-26-invalid-context-failure-reason.md"))
+    for token in [
+        "status: completed",
+        "LAError.Code.invalidContext",
+        "testAuthenticationFailureReasonHandlesInvalidContext",
+        "hostile mutation",
+    ]:
+        require_contains(invalid_context_plan, token, "invalid context failure reason plan")
 
     face_id_plan = read_text("docs/plans/2026-06-17-019-add-face-id-usage-description-plan.md")
     for token in [
