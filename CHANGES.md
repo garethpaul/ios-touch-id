@@ -36,22 +36,29 @@ failure copy instead of treating it as an unknown authentication error.
 - Four bundle-identifier mutations and the isolated hostile removal of the new
   branch were rejected.
 - Python compilation, shell syntax, and `git diff --check` passed.
-- Hosted XCTest and review evidence remain the final pre-merge gates.
+- Hosted macOS baseline, Swift build, and focused XCTest passed.
+- CodeQL Actions, Python, and Swift analysis passed.
+- Immutable manual review of exact head
+  `799d3023bf13914668641b39a8611b7655bf1696` found no actionable issue.
+- That reviewed head merged to master as
+  `08fbd0ed113a832fc4d7e91eaef53b555a40f3ba`.
 
 ### Bugs / findings
 
 - P2: Apple's known forbidden-authentication-UI code fell through to the same
   message as unknown codes and unrelated error domains.
 
-### Blockers
+### Review limitations
 
 - `xcodebuild` is unavailable locally; hosted macOS CI remains authoritative for
   Swift, UIKit, LocalAuthentication, and XCTest execution.
+- `$codex-review` was attempted against `origin/master`, but stopped before
+  analysis with OpenAI HTTP 401 authentication failure. No review finding was
+  suppressed; the exact diff received an immutable manual review.
 
 ### Next action
 
-- Run the full gate, review the exact PR head, and merge only after hosted
-  XCTest and CodeQL verification pass.
+- Continue repository maintenance from the merged, fully green master head.
 
 ## 2026-06-26 - P2 - Classify invalid authentication contexts
 
