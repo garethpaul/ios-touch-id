@@ -131,6 +131,8 @@ class ViewController: UIViewController {
             return "system canceled authentication"
         case .appCancel:
             return "app canceled authentication"
+        case .invalidContext:
+            return "authentication context invalid"
         case .passcodeNotSet:
             return "passcode not set"
         case .userFallback:

@@ -1,5 +1,32 @@
 # Changes
 
+## 2026-06-26 - P2 - Classify invalid authentication contexts
+
+### Summary
+Mapped LocalAuthentication's known `.invalidContext` result to explicit local
+failure copy instead of treating it as an unknown authentication error.
+
+### Work completed
+- Added the missing invalidated-context branch to failure classification.
+- Added focused XCTest and static contracts for the known error code.
+- Preserved stale-attempt rejection and generic handling for unrelated domains
+  and unknown codes.
+
+### Validation
+- The source contract failed before implementation on the missing switch branch.
+- Local and hosted verification evidence is recorded in the completed plan.
+
+### Bugs / findings
+- P2: Apple's known previously-invalidated context code fell through to the same
+  message as unknown codes and unrelated error domains.
+
+### Blockers
+- `xcodebuild` is unavailable locally; hosted macOS CI remains authoritative for
+  Swift, UIKit, LocalAuthentication, and XCTest execution.
+
+### Next action
+- Merge only after exact-head review and hosted checks pass.
+
 ## 2026-06-25 05:19 - P2 - Classify app-canceled authentication
 
 ### Summary
