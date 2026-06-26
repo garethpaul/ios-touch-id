@@ -88,6 +88,12 @@ final class touchidTests: XCTestCase {
         XCTAssertEqual(controller.authenticationFailureReason(error), "authentication context invalid")
     }
 
+    func testAuthenticationFailureReasonHandlesNotInteractive() {
+        let controller = ViewController()
+        let error = NSError(domain: LAError.errorDomain, code: LAError.Code.notInteractive.rawValue)
+        XCTAssertEqual(controller.authenticationFailureReason(error), "authentication interaction unavailable")
+    }
+
     func testAuthenticationFailureReasonHandlesPasscodeNotSet() {
         let controller = ViewController()
         let error = NSError(domain: LAError.errorDomain, code: LAError.Code.passcodeNotSet.rawValue)

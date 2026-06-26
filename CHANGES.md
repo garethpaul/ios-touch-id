@@ -1,5 +1,58 @@
 # Changes
 
+## 2026-06-26 14:05 PDT - P2 - Classify unavailable authentication interaction
+
+### Summary
+
+Mapped LocalAuthentication's known `.notInteractive` result to explicit local
+failure copy instead of treating it as an unknown authentication error.
+
+### Work completed
+
+- Added the missing noninteractive-result branch to failure classification.
+- Added focused XCTest and static contracts for the known error code.
+- Preserved the error-domain guard, stale-attempt rejection, fail-closed result
+  normalization, and generic handling for unrelated domains and unknown codes.
+
+### Threads
+
+- Started: none — the bounded classification change was completed directly.
+- Continued: none.
+- Stopped: none.
+
+### Files changed
+
+- `touchid/ViewController.swift` — classifies `.notInteractive` explicitly.
+- `touchidTests/touchidTests.swift` — covers the known framework result.
+- `scripts/check-baseline.py` — binds the source, test, and completed plan.
+- `README.md`, `SECURITY.md`, `VISION.md`, and the completed plan — record the
+  local-only failure boundary.
+
+### Validation
+
+- Red-first source contract failed on the missing `.notInteractive` branch.
+- Every Make alias passed from the checkout, and `make check` passed through the
+  absolute Makefile path from `/tmp`.
+- Four bundle-identifier mutations and the isolated hostile removal of the new
+  branch were rejected.
+- Python compilation, shell syntax, and `git diff --check` passed.
+- Hosted XCTest and review evidence remain the final pre-merge gates.
+
+### Bugs / findings
+
+- P2: Apple's known forbidden-authentication-UI code fell through to the same
+  message as unknown codes and unrelated error domains.
+
+### Blockers
+
+- `xcodebuild` is unavailable locally; hosted macOS CI remains authoritative for
+  Swift, UIKit, LocalAuthentication, and XCTest execution.
+
+### Next action
+
+- Run the full gate, review the exact PR head, and merge only after hosted
+  XCTest and CodeQL verification pass.
+
 ## 2026-06-26 - P2 - Classify invalid authentication contexts
 
 ### Summary

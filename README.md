@@ -76,7 +76,9 @@ accounts, tokens, networking, uploads, or analytics.
 The app plist includes a Face ID usage description that keeps the permission
 purpose local and on-device instead of implying account or server authentication.
 The biometric-neutral failure copy keeps unavailable, unenrolled, and lockout
-status accurate across Touch ID and Face ID hardware.
+status accurate across Touch ID and Face ID hardware. Known attempts where the
+required authentication interface cannot be displayed report that local
+interaction is unavailable instead of being classified as an unknown error.
 
 ## Testing and Verification
 

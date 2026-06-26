@@ -56,6 +56,7 @@ Priority:
 - Invalidate active authentication contexts off-screen and reject stale callbacks
 - Preserve terminal context invalidation for every accepted authentication
   completion path
+- Distinguish known unavailable authentication interaction from unknown errors
 - Fail closed when LocalAuthentication callback success and error values conflict
 - Avoid treating biometric success as remote identity proof
 - Keep the sample clear that local biometric success is not server identity
