@@ -50,6 +50,7 @@ REQUIRED_FILES = [
     "docs/plans/2026-06-26-not-interactive-failure-reason.md",
     "docs/readme-overview.svg",
     "scripts/test-bundle-identifiers.py",
+    "scripts/test-make-spaced-path.py",
     "touchid.xcodeproj/project.pbxproj",
     "touchid.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
     "touchid.xcodeproj/xcshareddata/xcschemes/touchid.xcscheme",
@@ -467,11 +468,14 @@ def check_local_authentication_flow() -> None:
 def check_docs() -> None:
     makefile = read_text("Makefile")
     for token in [
-        ".PHONY: build check lint test",
-        "override ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))",
+        ".PHONY: __repository-make-authority build check lint test",
+        ".SECONDEXPANSION:",
+        "MAKEFILES must be empty",
+        "MAKEFILE_LIST must not be overridden",
+        "repository Makefile must be loaded alone",
         "export ROOT",
-        "lint test build: check",
-        'check:\n\tpython3 "$$ROOT/scripts/check-baseline.py"\n\tpython3 "$$ROOT/scripts/test-bundle-identifiers.py"\n\tcd "$$ROOT" && ./build.sh',
+        "lint test build:: check",
+        'check::\n\tpython3 "$$ROOT/scripts/check-baseline.py"\n\tpython3 "$$ROOT/scripts/test-bundle-identifiers.py"\n\tcd "$$ROOT" && ./build.sh\n\tpython3 "$$ROOT/scripts/test-make-spaced-path.py"',
     ]:
         require_contains(makefile, token, "Makefile")
     if (
@@ -483,6 +487,18 @@ def check_docs() -> None:
         or 'cd "$(ROOT)" && ./build.sh' in makefile
     ):
         fail("Makefile contains caller-relative verification commands")
+
+    spaced_path_test = read_text("scripts/test-make-spaced-path.py")
+    for token in [
+        'tool_stubs = root / "apple-tool-stubs"',
+        'environment["IOS_TOUCH_ID_FAKE_XCODEBUILD_LOG"]',
+        'environment["IOS_TOUCH_ID_FAKE_XCRUN_LOG"]',
+        'environment["PATH"] = str(tool_stubs) + os.pathsep + environment["PATH"]',
+        'call.startswith("-list ")',
+        'call.endswith(" test")',
+        '"simctl list devices available --json"',
+    ]:
+        require_contains(spaced_path_test, token, "spaced-path Make regression")
 
     workflow = read_text(".github/workflows/check.yml")
     for token in [
@@ -692,6 +708,7 @@ def check_docs() -> None:
         location_make_statuses == ["status: completed"]
         and "All four Make gates passed from the checkout" in location_make_verification
         and "All four Make gates passed from `/tmp` through the absolute Makefile path" in location_make_verification
+        and "GNU Make 4.2 and 4.4 space-containing absolute Makefile paths passed" in location_make_verification
         and "python3 -m py_compile scripts/check-baseline.py" in location_make_verification
         and "sh -n build.sh" in location_make_verification
         and "project metadata parsing" in location_make_verification
