@@ -6,11 +6,13 @@ status: completed
 
 Absolute Makefile invocations previously resolved both the Python checker and
 `build.sh` relative to the caller instead of the checkout, so documented
-verification aliases failed outside the repository directory.
+verification aliases failed outside the repository directory. GNU Make also
+splits loaded absolute Makefile paths containing spaces.
 
 ## Scope
 
-1. Derive the checkout root from the loaded Makefile.
+1. Derive the checkout root from a validated single loaded Makefile while
+   preserving spaces.
 2. Invoke the checker by absolute path and enter the checkout before `build.sh`.
 3. Add exact Makefile, completed-plan, external-run, and guidance contracts.
 4. Preserve LocalAuthentication behavior, tests, project metadata, and workflow
@@ -38,6 +40,7 @@ verification aliases failed outside the repository directory.
 
 - All four Make gates passed from the checkout.
 - All four Make gates passed from `/tmp` through the absolute Makefile path.
+- GNU Make 4.2 and 4.4 space-containing absolute Makefile paths passed.
 - `python3 -m py_compile scripts/check-baseline.py`, `sh -n build.sh`, and
   project metadata parsing passed; `git diff --check` passed.
 - Local validation reported that `xcodebuild` was unavailable, so the static
