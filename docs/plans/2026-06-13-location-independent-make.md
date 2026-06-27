@@ -41,6 +41,9 @@ splits loaded absolute Makefile paths containing spaces.
 - All four Make gates passed from the checkout.
 - All four Make gates passed from `/tmp` through the absolute Makefile path.
 - GNU Make 4.2 and 4.4 space-containing absolute Makefile paths passed.
+- Hosted validation runs real XCTest in the outer gate; the copied-checkout
+  regression stubs Apple tools only after proving project inspection, simulator
+  selection, and the Xcode test boundary were reached.
 - `python3 -m py_compile scripts/check-baseline.py`, `sh -n build.sh`, and
   project metadata parsing passed; `git diff --check` passed.
 - Local validation reported that `xcodebuild` was unavailable, so the static

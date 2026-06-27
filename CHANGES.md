@@ -2,6 +2,8 @@
 
 - Preserved space-containing absolute Makefile roots and rejected ambiguous
   loaded-file authority without changing authentication behavior.
+- Kept the copied-checkout regression deterministic by stubbing its Apple tool
+  boundary after the outer hosted gate runs real XCTest.
 
 ## 2026-06-26 14:05 PDT - P2 - Classify unavailable authentication interaction
 

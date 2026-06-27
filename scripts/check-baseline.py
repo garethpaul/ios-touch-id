@@ -488,6 +488,18 @@ def check_docs() -> None:
     ):
         fail("Makefile contains caller-relative verification commands")
 
+    spaced_path_test = read_text("scripts/test-make-spaced-path.py")
+    for token in [
+        'tool_stubs = root / "apple-tool-stubs"',
+        'environment["IOS_TOUCH_ID_FAKE_XCODEBUILD_LOG"]',
+        'environment["IOS_TOUCH_ID_FAKE_XCRUN_LOG"]',
+        'environment["PATH"] = str(tool_stubs) + os.pathsep + environment["PATH"]',
+        'call.startswith("-list ")',
+        'call.endswith(" test")',
+        '"simctl list devices available --json"',
+    ]:
+        require_contains(spaced_path_test, token, "spaced-path Make regression")
+
     workflow = read_text(".github/workflows/check.yml")
     for token in [
         "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405",

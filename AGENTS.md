@@ -18,7 +18,9 @@
 - Install dependencies: no repository-specific install command is documented.
 - Full baseline: `make check`
 - Make gates support absolute checkout paths containing spaces; preserve the
-  single-Makefile authority boundary and recursive regression.
+  single-Makefile authority boundary and recursive regression. Keep native
+  XCTest in the outer gate and deterministic Apple tool stubs in its copied
+  checkout so hosted validation does not launch the simulator twice.
 - Local Apple development: `open touchid.xcodeproj`
 - If a command above skips because a platform toolchain is missing, verify on a machine with that SDK before claiming platform behavior is tested.
 

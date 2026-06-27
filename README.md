@@ -137,7 +137,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
   security documentation.
 - The same gates may be invoked through an absolute Makefile path from another
   directory, including when the checkout path contains spaces; verification
-  resolves all commands relative to the checkout.
+  resolves all commands relative to the checkout. Hosted validation executes
+  real XCTest once, while the copied-path regression uses deterministic Apple
+  tool stubs after proving that project inspection and the test boundary run.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `docs/plans/2026-06-09-make-gate-aliases.md` for the local gate alias guardrail.

@@ -22,6 +22,11 @@ def run_make(make, arguments, caller, environment):
     )
 
 
+def write_executable(path, content):
+    path.write_text(content, encoding="utf-8")
+    path.chmod(0o755)
+
+
 def main():
     if os.environ.get(CHILD_MARKER) == "1":
         return
@@ -46,6 +51,28 @@ def main():
         )
         environment = os.environ.copy()
         environment[CHILD_MARKER] = "1"
+        tool_stubs = root / "apple-tool-stubs"
+        tool_stubs.mkdir()
+        xcodebuild_log = root / "xcodebuild.log"
+        xcrun_log = root / "xcrun.log"
+        write_executable(
+            tool_stubs / "xcodebuild",
+            "#!/bin/sh\n"
+            'printf "%s\\n" "$*" >> "$IOS_TOUCH_ID_FAKE_XCODEBUILD_LOG"\n',
+        )
+        write_executable(
+            tool_stubs / "xcrun",
+            "#!/bin/sh\n"
+            'printf "%s\\n" "$*" >> "$IOS_TOUCH_ID_FAKE_XCRUN_LOG"\n'
+            "cat <<'JSON'\n"
+            '{"devices":{"com.apple.CoreSimulator.SimRuntime.iOS-18-5":'
+            '[{"isAvailable":true,"name":"iPhone Test",'
+            '"state":"Shutdown","udid":"00000000-0000-0000-0000-000000000000"}]}}\n'
+            "JSON\n",
+        )
+        environment["IOS_TOUCH_ID_FAKE_XCODEBUILD_LOG"] = str(xcodebuild_log)
+        environment["IOS_TOUCH_ID_FAKE_XCRUN_LOG"] = str(xcrun_log)
+        environment["PATH"] = str(tool_stubs) + os.pathsep + environment["PATH"]
         make = environment.get("IOS_TOUCH_ID_MAKE", "make")
         repository_makefile = str(copied / "Makefile")
         subprocess.run(
@@ -55,6 +82,15 @@ def main():
             check=True,
             timeout=180,
         )
+        xcodebuild_calls = xcodebuild_log.read_text(encoding="utf-8").splitlines()
+        if not any(call.startswith("-list ") for call in xcodebuild_calls):
+            raise RuntimeError("copied baseline must inspect the Xcode project")
+        if not any(call.endswith(" test") for call in xcodebuild_calls):
+            raise RuntimeError("copied build must reach the Xcode test boundary")
+        if xcrun_log.read_text(encoding="utf-8").splitlines() != [
+            "simctl list devices available --json"
+        ]:
+            raise RuntimeError("copied build must select one available simulator")
 
         extra_makefile = root / "extra.mk"
         extra_makefile.write_text(".PHONY: extra\nextra:\n\t@:\n", encoding="utf-8")
